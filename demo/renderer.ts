@@ -1,4 +1,3 @@
-import { faTshirt } from '@fortawesome/free-solid-svg-icons';
 import {
     Buffer,
     Camera,
@@ -10,6 +9,7 @@ import {
     Program,
     Renderer,
     Shader,
+    vec3,
 } from 'webgl-operate';
 
 export class PointRenderer extends Renderer {
@@ -101,7 +101,7 @@ export class PointRenderer extends Renderer {
         this._program.unbind();
     }
 
-    public set points(points: Float32Array[]) {
+    public set points(points: vec3[]) {
         const buf = new Float32Array(points.length * 3);
         points.forEach((p, i) => buf.set(p, i * 3));
         this._positions.data(new Float32Array(buf), this._gl.STATIC_DRAW);
