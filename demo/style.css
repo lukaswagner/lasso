@@ -1,3 +1,50 @@
 body {
     font-family: sans-serif;
+    font-size: xx-large;
+    overflow: hidden;
+    margin: 0;
+    --space: 0.5em;
+    --small-space: 0.3em;
+    --radius: 0.15em;
+}
+
+canvas {
+    width: 100vw;
+    height: 100vh;
+}
+
+#ui {
+    border-radius: var(--radius);
+    position: absolute;
+    top: var(--space);
+    left: var(--space);
+    background-color: #333;
+    color: #ddd;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--small-space);
+    padding: var(--small-space);
+}
+
+#ui div {
+    border-radius: var(--radius);
+    padding: var(--small-space);
+    background-color: #555;
+    cursor: pointer;
+    color: #ddd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#ui div.selected {
+    background-color: #777;
+}
+
+#ui div:hover {
+    background-color: #999;
+}
+
+.d-none {
+    display: none !important;
 }

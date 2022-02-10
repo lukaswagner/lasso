@@ -2,4 +2,17 @@ head
     title lasso demo
 
 body
-    d hi
+    canvas#canvas
+    div#ui
+        div#move(title='move camera')
+            i.text-light.fas.fa-arrows
+        div#lasso(title='lasso select')
+            i.text-light.fas.fa-regular.fa-circle
+        div#box(title='box select')
+            i.text-light.fas.fa-regular.fa-square
+        div#plus(title='add to selection')
+            i.text-light.fas.fa-plus
+        div#minus(title='remove from selection')
+            i.text-light.fas.fa-minus
+        div#reset(title='reset selection')
+            i.text-light.fas.fa-regular.fa-trash-can

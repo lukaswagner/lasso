@@ -17,6 +17,7 @@ export default function(env, args) {
         context: path.join(__dirname, '..', 'demo'),
         entry: {
             index: './index.ts',
+            icons: './icons.ts',
             style: './style.css',
         },
         output: { clean: true },
@@ -43,8 +44,13 @@ export default function(env, args) {
                     test: /\.ts$/,
                     use: { loader: 'ts-loader' },
                 },
+                {
+                    test: /\.(glsl|vert|frag)$/,
+                    use: { loader: 'webpack-glsl-loader' },
+                },
             ],
         },
-        devServer: { hot: false }
+        devServer: { hot: false },
+        devtool: 'eval-source-map',
     }
 }
