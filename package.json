@@ -1,0 +1,21 @@
+{
+  "name": "@lukaswagner/lasso",
+  "version": "0.0.0",
+  "description": "lasso select helper",
+  "scripts": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lukaswagner/lasso.git"
+  },
+  "keywords": [
+    "lasso",
+    "selection"
+  ],
+  "author": "Lukas Wagner",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lukaswagner/lasso/issues"
+  },
+  "homepage": "https://github.com/lukaswagner/lasso#readme"
+}
