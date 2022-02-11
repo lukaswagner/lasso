@@ -39,7 +39,7 @@ onlyOne(lower);
 const lasso = new Lasso({
     target: htmlCanvas,
     points,
-    callback: (s) => console.log(s),
+    callback: (s: Array<boolean>) => console.log(s),
 });
 
 // hide lower row while moving, control camera movement

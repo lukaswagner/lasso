@@ -14,8 +14,10 @@ export default function(env, args) {
         entry: './lasso.ts',
         output: {
             filename: 'lasso.js',
-            library: 'lasso',
-            libraryTarget: 'umd',
+            library: {
+                name: 'lasso',
+                type: 'amd'
+            },
             path: path.join(__dirname, '..', 'lib'),
             clean: true,
         },

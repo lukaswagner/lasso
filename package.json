@@ -2,15 +2,17 @@
   "name": "@lukaswagner/lasso",
   "version": "0.0.0",
   "description": "lasso select helper",
-  "type": "module",
-  "module": "./lib/lasso.js",
-  "exports": "./lib/lasso.js",
-  "types": "./lib/types/lasso.d.ts",
+  "main": "lib/lasso.js",
+  "types": "lib/types/lasso.d.ts",
   "scripts": {
-    "build": "webpack build --config webpack/lib.js --mode production",
-    "watch": "webpack watch --config webpack/lib.js --mode development",
-    "start": "webpack serve --config webpack/demo.js --mode development",
-    "dev": "concurrently npm:watch npm:start"
+    "lib:build": "webpack build --config webpack/lib.mjs --mode production",
+    "lib:watch": "webpack watch --config webpack/lib.mjs --mode development",
+    "demo:build": "webpack build --config webpack/demo.mjs --mode production",
+    "demo:watch": "webpack watch --config webpack/demo.mjs --mode production",
+    "demo:start": "webpack serve --config webpack/demo.mjs --mode development",
+    "build": "npm run lib:build",
+    "start": "npm run lib:start",
+    "dev": "concurrently npm:lib:watch npm:demo:start"
   },
   "repository": {
     "type": "git",

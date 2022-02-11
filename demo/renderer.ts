@@ -73,10 +73,13 @@ export class PointRenderer extends Renderer {
 
     protected onUpdate(): boolean {
         if(this._move) this._navigation.update();
-        return this._camera.altered;
+        return this._altered.any || this._camera.altered;
     }
 
     protected onPrepare(): void {
+        if (this._altered.frameSize) {
+            this._camera.viewport = [this._frameSize[0], this._frameSize[1]];
+        }
         if (this._altered.canvasSize) {
             this._camera.aspect = this._canvasSize[0] / this._canvasSize[1];
         }

@@ -1,6 +1,7 @@
-import { mat4 } from 'gl-matrix';
+import { mat4, vec2 } from 'gl-matrix';
 import { BitArray } from './types/bitarray';
 import { Callback } from './types/callback';
+import { Listeners } from './types/listeners';
 import { boxToPath, isBox, Mask } from './types/mask';
 import { Options } from './types/options';
 import { ResultType } from './types/resultType';
@@ -17,13 +18,17 @@ export class Lasso {
 
     protected _selection: BitArray;
     protected _steps: Step[] = [];
-    protected _step: number = 0
+    protected _step: number = 0;
+
+    protected _currentPath: vec2[];
+    protected _listeners: Listeners;
 
     protected apply(step: Step): void {
+        console.log('applying', step);
     }
 
     public constructor(options?: Options) {
-        this._resultType = options?.resultType ?? ResultType.IntArray;
+        this._resultType = options?.resultType ?? ResultType.BooleanArray;
         this._points = options?.points;
         this._target = options?.target;
         this._matrix = options?.matrix ?? mat4.create();
@@ -79,11 +84,31 @@ export class Lasso {
     //#endregion configuration
 
     //#region main interface
-    public enable(): void {
+    public enable(): Lasso{
+        if (this._listeners) return this;
+        const pos = (ev: MouseEvent) =>
+            vec2.fromValues(ev.x, this._target.clientHeight - ev.y);
+        const down = (ev: MouseEvent) => this._currentPath = [ pos(ev) ];
+        const move =  (ev: MouseEvent) => this._currentPath.push(pos(ev));
+        const up = (ev: MouseEvent) => {
+            this.add(this._currentPath);
+            this.redo();
+        }
+        this._target.addEventListener('mousedown', down);
+        this._target.addEventListener('mousemove', move);
+        this._target.addEventListener('mouseup', up);
+        this._listeners = { down, move, up };
+        return this;
     }
     public start = this.enable;
 
-    public disable(): void {
+    public disable(): Lasso {
+        if (!this._listeners) return this;
+        this._target.removeEventListener('mousedown', this._listeners.down);
+        this._target.removeEventListener('mousemove', this._listeners.move);
+        this._target.removeEventListener('mouseup', this._listeners.up);
+        this._listeners = undefined;
+        return this;
     }
     public stop = this.disable;
 
