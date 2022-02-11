@@ -26,6 +26,7 @@ export class PointRenderer extends Renderer {
     protected _viewProjection: WebGLUniformLocation;
 
     protected _positions: Buffer;
+    protected _selected: Buffer;
     protected _numPoints: number;
 
     protected onInitialize(
@@ -60,7 +61,17 @@ export class PointRenderer extends Renderer {
 
         this._positions = new Buffer(context);
         this._positions.initialize(this._gl.ARRAY_BUFFER);
-        this._positions.attribEnable(0, 3, this._gl.FLOAT);
+        this._positions.attribEnable(
+            0, 3, this._gl.FLOAT, false, 0, 0, true, false);
+        this._gl.vertexAttribDivisor(0, 0);
+
+        this._selected = new Buffer(context);
+        this._selected.initialize(this._gl.ARRAY_BUFFER);
+        this._selected.bind();
+
+        this._gl.vertexAttribPointer(1, 1, this._gl.UNSIGNED_INT, false, 0, 0);
+        this._gl.enableVertexAttribArray(1);
+        this._gl.vertexAttribDivisor(1, 0);
 
         return true;
     }
@@ -94,22 +105,25 @@ export class PointRenderer extends Renderer {
         this._gl.drawBuffers([ this._gl.BACK ]);
 
         this._program.bind();
-        this._positions.bind();
-
         this._gl.uniformMatrix4fv(
             this._viewProjection, false, this._camera.viewProjection);
 
         this._gl.drawArrays(this._gl.POINTS, 0, this._numPoints);
 
         this._positions.unbind();
-        this._program.unbind();
     }
 
     public set points(points: vec3[]) {
         const buf = new Float32Array(points.length * 3);
         points.forEach((p, i) => buf.set(p, i * 3));
         this._positions.data(new Float32Array(buf), this._gl.STATIC_DRAW);
+        this._selected.data(
+            new Uint8Array(points.length), this._gl.STATIC_DRAW);
         this._numPoints = points.length;
+    }
+
+    public set selected(selected: Uint8Array) {
+        this._selected.data(selected, this._gl.STATIC_DRAW);
     }
 
     public set move(move: boolean) {

@@ -1,4 +1,4 @@
-import { mat4, vec2 } from 'gl-matrix';
+import { mat4, vec2, vec3 } from 'gl-matrix';
 import { BitArray } from './types/bitarray';
 import { Callback } from './types/callback';
 import { Listeners } from './types/listeners';
@@ -8,6 +8,10 @@ import { ResultType } from './types/resultType';
 import { Selection } from './types/selection';
 import { Source } from './types/source';
 import { Step, StepType } from './types/step';
+import { MatrixCache, ResolutionCache } from './types/cache';
+import { mapTo2D } from './helpers/mapTo2D';
+import { applyInsideCheck } from './helpers/applyInsideCheck';
+import { mapToPixels } from './helpers/mapToPixels';
 
 export class Lasso {
     protected _resultType: ResultType;
@@ -16,15 +20,55 @@ export class Lasso {
     protected _matrix: mat4;
     protected _callback: Callback;
 
+    protected _mCache: MatrixCache;
+    protected _rCache: ResolutionCache;
     protected _selection: BitArray;
     protected _steps: Step[] = [];
-    protected _step: number = 0;
+    protected _step: number = -1;
 
     protected _currentPath: vec2[];
     protected _listeners: Listeners;
 
     protected apply(step: Step): void {
-        console.log('applying', step);
+        let mCacheUpdated = false;
+        if (this._mCache?.matrix !== this._matrix) {
+            mCacheUpdated = true;
+            this._mCache = {
+                matrix: this._matrix,
+                points: mapTo2D(this._points, this._matrix)
+            }
+        }
+
+        const resolution = vec2.fromValues(
+            this._target.clientWidth,this._target.clientHeight);
+        if (
+            this._rCache?.resolution[0] !== resolution[0] ||
+            this._rCache?.resolution[1] !== resolution[1] ||
+            mCacheUpdated
+        ) {
+            this._rCache = {
+                resolution,
+                points: mapToPixels(this._mCache.points, resolution)
+            }
+        }
+
+        switch (step.type) {
+            case StepType.Add:
+                applyInsideCheck(
+                    this._rCache.points, step.mask, this._selection, true);
+                break;
+            case StepType.Sub:
+                applyInsideCheck(
+                    this._rCache.points, step.mask, this._selection, false);
+                break;
+            case StepType.Rst:
+                this._selection = new BitArray(this._points.length);
+                break;
+            default:
+                break;
+        }
+
+        this._callback?.(this.selection);
     }
 
     public constructor(options?: Options) {
@@ -33,6 +77,7 @@ export class Lasso {
         this._target = options?.target;
         this._matrix = options?.matrix ?? mat4.create();
         this._callback = options?.callback;
+        if(this._points) this.reset();
     }
 
     //#region configuration
@@ -47,6 +92,9 @@ export class Lasso {
 
     public setPoints(points: Source): Lasso {
         this.points = points;
+        this._steps = [];
+        this._step = -1;
+        this.reset();
         return this;
     }
 
@@ -89,10 +137,9 @@ export class Lasso {
         const pos = (ev: MouseEvent) =>
             vec2.fromValues(ev.x, this._target.clientHeight - ev.y);
         const down = (ev: MouseEvent) => this._currentPath = [ pos(ev) ];
-        const move =  (ev: MouseEvent) => this._currentPath.push(pos(ev));
+        const move =  (ev: MouseEvent) => this._currentPath?.push(pos(ev));
         const up = (ev: MouseEvent) => {
             this.add(this._currentPath);
-            this.redo();
         }
         this._target.addEventListener('mousedown', down);
         this._target.addEventListener('mousemove', move);
@@ -113,8 +160,8 @@ export class Lasso {
     public stop = this.disable;
 
     public reset(): Lasso {
-        this._selection = new BitArray(this._points.length);
         this._steps.push({ type: StepType.Rst });
+        this.redo();
         return this;
     }
 
@@ -167,6 +214,7 @@ export class Lasso {
             matrix: this._matrix,
             mask
         });
+        this.redo();
         return this;
     }
 
@@ -177,6 +225,7 @@ export class Lasso {
             matrix: this._matrix,
             mask
         });
+        this.redo();
         return this;
     }
     public sub = this.subtract;
@@ -186,7 +235,35 @@ export class Lasso {
     }
 
     public get selection(): Selection {
-        return undefined;
+        if(!this._selection) return undefined;
+        switch (this._resultType) {
+            case ResultType.BooleanArray: {
+                const result = new Array<boolean>(this._selection.length);
+                for(let i = 0; i < this._selection.length; i++)
+                    result[i] = this._selection.get(i);
+                return result;
+            }
+            case ResultType.IntArray: {
+                const result = new Uint8Array(this._selection.length);
+                for(let i = 0; i < this._selection.length; i++)
+                    result[i] = +this._selection.get(i);
+                return result;
+            }
+            case ResultType.PointSet: {
+                const result = new Set<vec3>();
+                for(let i = 0; i < this._selection.length; i++)
+                    if (this._selection.get(i)) result.add(this._points.at(i));
+                return result;
+            }
+            case ResultType.IndexSet: {
+                const result = new Set<number>();
+                for(let i = 0; i < this._selection.length; i++)
+                    if (this._selection.get(i)) result.add(i);
+                return result;
+            }
+            default:
+                return undefined;
+        }
     }
     //#endregion auxiliary interface
 }
