@@ -1,4 +1,4 @@
-export enum Mode {
+export enum ResultType {
     BooleanArray,
     IntArray,
     IndexSet,

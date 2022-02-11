@@ -12,10 +12,17 @@ export default function(env, args) {
     return {
         context: path.join(__dirname, '..', 'src'),
         entry: './lasso.ts',
-        output: { clean: true, path: path.join(__dirname, '..', 'lib') },
+        output: {
+            filename: 'lasso.js',
+            library: 'lasso',
+            libraryTarget: 'umd',
+            path: path.join(__dirname, '..', 'lib'),
+            clean: true,
+        },
         resolve: { extensions: ['.ts', '...'] },
         module: {
             rules: [ { test: /\.ts$/, use: { loader: 'ts-loader' } } ],
         },
+        devtool: 'source-map',
     }
 }

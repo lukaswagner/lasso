@@ -5,6 +5,7 @@ import {
     DefaultFramebuffer,
     EventProvider,
     Invalidate,
+    mat4,
     Navigation,
     Program,
     Renderer,
@@ -110,5 +111,9 @@ export class PointRenderer extends Renderer {
 
     public set move(move: boolean) {
         this._move = move;
+    }
+
+    public get viewProjection(): mat4 {
+        return this._camera.viewProjection;
     }
 }

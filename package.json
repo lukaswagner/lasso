@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "lasso select helper",
   "type": "module",
+  "module": "./lib/lasso.js",
+  "exports": "./lib/lasso.js",
+  "types": "./lib/types/lasso.d.ts",
   "scripts": {
     "build": "webpack build --config webpack/lib.js --mode production",
     "watch": "webpack watch --config webpack/lib.js --mode development",
