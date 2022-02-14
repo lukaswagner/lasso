@@ -69,7 +69,7 @@ export class PointRenderer extends Renderer {
         this._selected.initialize(this._gl.ARRAY_BUFFER);
         this._selected.bind();
 
-        this._gl.vertexAttribPointer(1, 1, this._gl.UNSIGNED_INT, false, 0, 0);
+        this._gl.vertexAttribPointer(1, 1, this._gl.UNSIGNED_BYTE, false, 0, 0);
         this._gl.enableVertexAttribArray(1);
         this._gl.vertexAttribDivisor(1, 0);
 

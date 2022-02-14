@@ -8,7 +8,7 @@ const canvas = new Canvas(htmlCanvas, options);
 const renderer = new PointRenderer();
 canvas.renderer = renderer;
 
-const numPoints = 1e1;
+const numPoints = 1e3;
 const points: vec3[] = [];
 const rand = () => Math.random() * 2 - 1;
 for(let i = 0; i < numPoints; i++) {
@@ -42,7 +42,6 @@ const lasso = new Lasso({
     callback: (s: Uint8Array) => renderer.selected = s,
     resultType: ResultType.IntArray
 });
-lasso.verbose = true;
 
 // hide lower row while moving, control camera movement
 const modeSwitch = (move: boolean) => {
@@ -61,5 +60,5 @@ circle.addEventListener('click', modeSwitch.bind(undefined, false));
 box.addEventListener('click', modeSwitch.bind(undefined, false));
 
 // initialize
-move.click();
 circle.click();
+plus.click();

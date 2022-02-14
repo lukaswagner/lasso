@@ -7,8 +7,16 @@ import { pointInsidePolygon } from './pointInsidePolygon';
 export function applyInsideCheck(
     points: vec2[], path: Path, selection: BitArray, value: boolean
 ): void {
+    if (window.verbose) {
+        console.log('inside-out based selection check');
+        console.log('path:', path);
+        console.log('input:', points);
+    }
+
     const bb = getBoundingBox(path);
     points.forEach((p, i) => {
-        if (pointInsidePolygon(p, path, bb)) selection.set(i, value);
+        const inside = pointInsidePolygon(p, path, bb);
+        if (inside) selection.set(i, value);
+        if (window.verbose) console.log(p, inside ? 'is inside' : 'is outside');
     });
 }
