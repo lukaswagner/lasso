@@ -126,6 +126,7 @@ export class PointRenderer extends Renderer {
 
     public set selected(selected: Uint8Array) {
         this._selected.data(selected, this._gl.STATIC_DRAW);
+        this._invalidate(true);
     }
 
     public set move(move: boolean) {
