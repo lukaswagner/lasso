@@ -26,7 +26,7 @@ const plus = document.getElementById('plus') as HTMLDivElement;
 const minus = document.getElementById('minus') as HTMLDivElement;
 const reset = document.getElementById('reset') as HTMLDivElement;
 const upper = [move, circle, box];
-const lower = [plus, minus, reset];
+const lower = [plus, minus];
 
 // only highlight one in row
 const onlyOne = (a: HTMLDivElement[]) =>
@@ -64,6 +64,7 @@ box.addEventListener('click', modeSwitch.bind(undefined, false));
 plus.addEventListener('click', () => lasso.defaultModeIsAdd = true);
 minus.addEventListener('click', () => lasso.defaultModeIsAdd = false);
 
+reset.addEventListener('click', () => lasso.reset());
 undo.addEventListener('click', () => lasso.undo());
 redo.addEventListener('click', () => lasso.redo());
 

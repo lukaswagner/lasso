@@ -21,7 +21,7 @@ canvas {
     background-color: #333;
     color: #ddd;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: var(--small-space);
     padding: var(--small-space);
 }
