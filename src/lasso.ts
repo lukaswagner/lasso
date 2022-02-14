@@ -2,7 +2,7 @@ import { mat4, vec2, vec3 } from 'gl-matrix';
 import { BitArray } from './types/bitarray';
 import { Callback } from './types/callback';
 import { Listeners } from './types/listeners';
-import { boxToPath, isBox, Mask } from './types/mask';
+import { Box, boxToPath, isBox, Mask } from './types/mask';
 import { Options } from './types/options';
 import { ResultType } from './types/resultType';
 import { Selection } from './types/selection';
@@ -12,6 +12,7 @@ import { MatrixCache, ResolutionCache } from './types/cache';
 import { mapTo2D } from './helpers/mapTo2D';
 import { applyInsideCheck } from './helpers/applyInsideCheck';
 import { mapToPixels } from './helpers/mapToPixels';
+import { Shape } from './types/shape';
 
 export class Lasso {
     protected _resultType: ResultType;
@@ -21,6 +22,7 @@ export class Lasso {
     protected _callback: Callback;
     protected _defaultModeIsAdd = true;
     protected _invertModifiers: string[] = ['Shift'];
+    protected _shape: Shape = Shape.Free;
 
     protected _mCache: MatrixCache;
     protected _rCache: ResolutionCache;
@@ -91,6 +93,48 @@ export class Lasso {
         if(this._step === this._steps.length - 1) this._steps.push(step);
         else this._steps.splice(
             this._step + 1, this._steps.length - this._step, step)
+    }
+
+    protected chooseAddSub(ev: MouseEvent, mask: Mask) {
+        let add = this._defaultModeIsAdd;
+        if(this._invertModifiers.every((m) => ev.getModifierState(m)))
+            add = !add;
+        if(add) this.add(mask);
+        else this.sub(mask);
+    }
+
+    protected enableFree() {
+        const pos = (ev: MouseEvent) =>
+            vec2.fromValues(ev.x, this._target.clientHeight - ev.y);
+        const down = (ev: MouseEvent) => this._currentPath = [ pos(ev) ];
+        const move =  (ev: MouseEvent) => this._currentPath?.push(pos(ev));
+        const up = (ev: MouseEvent) => {
+            this.chooseAddSub(ev, this._currentPath);
+            this._currentPath = undefined;
+        }
+        this._target.addEventListener('mousedown', down);
+        this._target.addEventListener('mousemove', move);
+        this._target.addEventListener('mouseup', up);
+        this._listeners = { down, move, up };
+    }
+
+    protected enableRect() {
+        const pos = (ev: MouseEvent) =>
+            vec2.fromValues(ev.x, this._target.clientHeight - ev.y);
+        const down = (ev: MouseEvent) => this._currentPath = [ pos(ev) ];
+        const up = (ev: MouseEvent) => {
+            const p = this._currentPath;
+            this._currentPath = undefined;
+            const start = p[0];
+            const size = vec2.sub(vec2.create(), pos(ev), start);
+            this.chooseAddSub(ev, {
+                x: start[0], y: start[1],
+                width: size[0], height: size[1]
+            });
+        }
+        this._target.addEventListener('mousedown', down);
+        this._target.addEventListener('mouseup', up);
+        this._listeners = { down, move: undefined, up };
     }
     //#endregion internal
 
@@ -180,25 +224,20 @@ export class Lasso {
     //#endregion configuration
 
     //#region main interface
-    public enable(): Lasso{
-        if (this._listeners) return this;
-        const pos = (ev: MouseEvent) =>
-            vec2.fromValues(ev.x, this._target.clientHeight - ev.y);
-        const down = (ev: MouseEvent) => this._currentPath = [ pos(ev) ];
-        const move =  (ev: MouseEvent) => this._currentPath?.push(pos(ev));
-        const up = (ev: MouseEvent) => {
-            const p = this._currentPath;
-            this._currentPath = undefined;
-            let add = this._defaultModeIsAdd;
-            if(this._invertModifiers.every((m) => ev.getModifierState(m)))
-                add = !add;
-            if(add) this.add(p);
-            else this.sub(p);
+    public enable(shape: Shape = this._shape): Lasso{
+        if (this._listeners && shape === this._shape) return this;
+        if (this._shape && shape !== this._shape) this.disable();
+        this._shape = shape;
+        switch (this._shape) {
+            case Shape.Free:
+                this.enableFree();
+                break;
+            case Shape.Rect:
+                this.enableRect();
+                break;
+            default:
+                break;
         }
-        this._target.addEventListener('mousedown', down);
-        this._target.addEventListener('mousemove', move);
-        this._target.addEventListener('mouseup', up);
-        this._listeners = { down, move, up };
         return this;
     }
     public start = this.enable;
@@ -206,7 +245,8 @@ export class Lasso {
     public disable(): Lasso {
         if (!this._listeners) return this;
         this._target.removeEventListener('mousedown', this._listeners.down);
-        this._target.removeEventListener('mousemove', this._listeners.move);
+        if(this._listeners.move)
+            this._target.removeEventListener('mousemove', this._listeners.move);
         this._target.removeEventListener('mouseup', this._listeners.up);
         this._listeners = undefined;
         return this;
@@ -323,3 +363,4 @@ export class Lasso {
 }
 
 export { ResultType } from './types/resultType';
+export { Shape } from './types/shape';

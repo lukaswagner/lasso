@@ -1,6 +1,6 @@
 import { Canvas, vec3 } from 'webgl-operate';
 import { PointRenderer } from './renderer';
-import { Lasso, ResultType } from '..';
+import { Lasso, ResultType, Shape } from '..';
 
 const htmlCanvas = document.getElementById('canvas') as HTMLCanvasElement;
 const options: WebGLContextAttributes = {};
@@ -45,21 +45,25 @@ const lasso = new Lasso({
     resultType: ResultType.IntArray
 });
 
-// hide lower row while moving, control camera movement
-const modeSwitch = (move: boolean) => {
-    lower.forEach((d) => d.classList[move ? 'add' : 'remove']('d-none'));
-    renderer.move = move;
-    // enable/disable lasso based on ui, keep matrix up to date
-    if(!move) {
-        lasso.matrix = renderer.viewProjection;
-        lasso.enable();
-    } else {
-        lasso.disable();
-    }
-}
-move.addEventListener('click', modeSwitch.bind(undefined, true));
-circle.addEventListener('click', modeSwitch.bind(undefined, false));
-box.addEventListener('click', modeSwitch.bind(undefined, false));
+move.addEventListener('click', () => {
+    lower.forEach((d) => d.classList.add('d-none'));
+    renderer.move = true;
+    lasso.disable();
+});
+
+circle.addEventListener('click', () => {
+    lower.forEach((d) => d.classList.remove('d-none'));
+    renderer.move = false;
+    lasso.matrix = renderer.viewProjection;
+    lasso.enable(Shape.Free);
+});
+
+box.addEventListener('click', () => {
+    lower.forEach((d) => d.classList.remove('d-none'));
+    renderer.move = false;
+    lasso.matrix = renderer.viewProjection;
+    lasso.enable(Shape.Rect);
+});
 
 plus.addEventListener('click', () => lasso.defaultModeIsAdd = true);
 minus.addEventListener('click', () => lasso.defaultModeIsAdd = false);

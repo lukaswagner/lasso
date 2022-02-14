@@ -6,7 +6,7 @@ import { intersectLineSegments } from './intersectLineSegments';
 export function pointInsidePolygon(
     point: vec2, polygon: Path, bb: BoundingBox
 ): boolean {
-    const s1 = vec2.sub(vec2.create(), bb.min, [-1, -1]);
+    const s1 = vec2.add(vec2.create(), bb.min, [-1, -1]);
     let inside = false;
     for(let i = 0; i < polygon.length; i++) {
         const s2 = polygon[i];
