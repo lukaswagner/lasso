@@ -48,3 +48,15 @@ canvas {
 .d-none {
     display: none !important;
 }
+
+#grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: linear-gradient(to right, #ccc 1px, transparent 1px),
+        linear-gradient(to bottom, #ccc 1px, transparent 1px);
+    background-size: 10vw 10vh;
+    pointer-events: none;
+}
