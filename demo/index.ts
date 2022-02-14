@@ -69,5 +69,5 @@ undo.addEventListener('click', () => lasso.undo());
 redo.addEventListener('click', () => lasso.redo());
 
 // initialize
-circle.click();
 move.click();
+plus.click();
