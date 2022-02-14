@@ -19,6 +19,8 @@ export class Lasso {
     protected _target: HTMLElement;
     protected _matrix: mat4;
     protected _callback: Callback;
+    protected _defaultModeIsAdd = true;
+    protected _invertModifiers: string[] = ['Shift'];
 
     protected _mCache: MatrixCache;
     protected _rCache: ResolutionCache;
@@ -29,6 +31,20 @@ export class Lasso {
     protected _currentPath: vec2[];
     protected _listeners: Listeners;
 
+    public constructor(options?: Options) {
+        this._resultType = options?.resultType ?? ResultType.BooleanArray;
+        this._points = options?.points;
+        this._target = options?.target;
+        this._matrix = options?.matrix ?? mat4.create();
+        this._callback = options?.callback;
+        if (options?.defaultModeIsAdd !== undefined)
+            this._defaultModeIsAdd = options?.defaultModeIsAdd;
+        const mod = options?.invertModifiers;
+        if (mod) this._invertModifiers = Array.isArray(mod) ? mod : [mod];
+        if(this._points) this.reset();
+    }
+
+    //#region internal
     protected apply(step: Step): void {
         let mCacheUpdated = false;
         if (this._mCache?.matrix !== this._matrix) {
@@ -70,15 +86,7 @@ export class Lasso {
 
         this._callback?.(this.selection);
     }
-
-    public constructor(options?: Options) {
-        this._resultType = options?.resultType ?? ResultType.BooleanArray;
-        this._points = options?.points;
-        this._target = options?.target;
-        this._matrix = options?.matrix ?? mat4.create();
-        this._callback = options?.callback;
-        if(this._points) this.reset();
-    }
+    //#endregion internal
 
     //#region configuration
     public setResultType(resultType: ResultType): Lasso {
@@ -138,6 +146,31 @@ export class Lasso {
     public set verbose(verbose: boolean) {
         window.verbose = verbose;
     }
+
+    public setDefaultModeIsAdd(add: boolean): Lasso {
+        this.defaultModeIsAdd = add;
+        return this;
+    }
+
+    public set defaultModeIsAdd(add: boolean) {
+        this._defaultModeIsAdd = add;
+    }
+
+    /**
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/getModifierState
+     */
+    public setInvertModifiers(modifiers: string | string[]): Lasso {
+        this.invertModifiers = modifiers;
+        return this;
+    }
+
+    /**
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/getModifierState
+     */
+    public set invertModifiers(modifiers: string | string[]) {
+        this._invertModifiers =
+            modifiers instanceof Array ? modifiers : [modifiers];
+    }
     //#endregion configuration
 
     //#region main interface
@@ -148,7 +181,11 @@ export class Lasso {
         const down = (ev: MouseEvent) => this._currentPath = [ pos(ev) ];
         const move =  (ev: MouseEvent) => this._currentPath?.push(pos(ev));
         const up = (ev: MouseEvent) => {
-            this.add(this._currentPath);
+            let add = this._defaultModeIsAdd;
+            if(this._invertModifiers.every((m) => ev.getModifierState(m)))
+                add = !add;
+            if(add) this.add(this._currentPath);
+            else this.sub(this._currentPath);
         }
         this._target.addEventListener('mousedown', down);
         this._target.addEventListener('mousemove', move);

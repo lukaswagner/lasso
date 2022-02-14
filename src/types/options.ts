@@ -8,5 +8,7 @@ export type Options = {
     points?: Source,
     target?: HTMLElement,
     matrix?: mat4,
-    callback?: Callback
+    callback?: Callback,
+    defaultModeIsAdd?: boolean,
+    invertModifiers?: string | string[]
 }

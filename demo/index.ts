@@ -59,6 +59,9 @@ move.addEventListener('click', modeSwitch.bind(undefined, true));
 circle.addEventListener('click', modeSwitch.bind(undefined, false));
 box.addEventListener('click', modeSwitch.bind(undefined, false));
 
+plus.addEventListener('click', () => lasso.defaultModeIsAdd = true);
+minus.addEventListener('click', () => lasso.defaultModeIsAdd = false);
+
 // initialize
 circle.click();
-plus.click();
+move.click();
