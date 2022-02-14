@@ -267,3 +267,5 @@ export class Lasso {
     }
     //#endregion auxiliary interface
 }
+
+export { ResultType } from './types/resultType';

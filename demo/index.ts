@@ -1,6 +1,6 @@
 import { Canvas, vec3 } from 'webgl-operate';
 import { PointRenderer } from './renderer';
-import { Lasso } from '..';
+import { Lasso, ResultType } from '..';
 
 const htmlCanvas = document.getElementById('canvas') as HTMLCanvasElement;
 const options: WebGLContextAttributes = {};
@@ -40,7 +40,7 @@ const lasso = new Lasso({
     target: htmlCanvas,
     points,
     callback: (s: Uint8Array) => renderer.selected = s,
-    resultType: 'intArray'
+    resultType: ResultType.IntArray
 });
 
 // hide lower row while moving, control camera movement
