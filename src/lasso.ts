@@ -263,7 +263,7 @@ export class Lasso {
     //#region auxiliary interface
     public add(mask: Mask): Lasso {
         if(isBox(mask)) mask = boxToPath(mask);
-        this._steps.push({
+        this.enqueueStep({
             type: StepType.Add,
             matrix: this._matrix,
             mask
@@ -274,7 +274,7 @@ export class Lasso {
 
     public subtract(mask: Mask): Lasso {
         if(isBox(mask)) mask = boxToPath(mask);
-        this._steps.push({
+        this.enqueueStep({
             type: StepType.Sub,
             matrix: this._matrix,
             mask
