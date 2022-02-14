@@ -86,6 +86,12 @@ export class Lasso {
 
         this._callback?.(this.selection);
     }
+
+    protected enqueueStep(step: Step) {
+        if(this._step === this._steps.length - 1) this._steps.push(step);
+        else this._steps.splice(
+            this._step + 1, this._steps.length - this._step, step)
+    }
     //#endregion internal
 
     //#region configuration
@@ -181,11 +187,13 @@ export class Lasso {
         const down = (ev: MouseEvent) => this._currentPath = [ pos(ev) ];
         const move =  (ev: MouseEvent) => this._currentPath?.push(pos(ev));
         const up = (ev: MouseEvent) => {
+            const p = this._currentPath;
+            this._currentPath = undefined;
             let add = this._defaultModeIsAdd;
             if(this._invertModifiers.every((m) => ev.getModifierState(m)))
                 add = !add;
-            if(add) this.add(this._currentPath);
-            else this.sub(this._currentPath);
+            if(add) this.add(p);
+            else this.sub(p);
         }
         this._target.addEventListener('mousedown', down);
         this._target.addEventListener('mousemove', move);
@@ -222,7 +230,7 @@ export class Lasso {
 
     public undo(): boolean {
         if(this._step === 0) return false;
-        let step = this._steps[++this._step];
+        let step = this._steps[this._step--];
         switch (step.type) {
             case StepType.Add:
                 this.apply(Object.assign({}, step, { type: StepType.Sub }));
@@ -232,13 +240,13 @@ export class Lasso {
                 break;
             case StepType.Rst:
                 let start = 0;
-                for (let i = this._step - 1; i >= 0; i--) {
+                for (let i = this._step; i >= 0; i--) {
                     if (this._steps[i].type === StepType.Rst) {
                         start = i;
                         break;
                     }
                 }
-                for (let i = start; i < this._step; i++) {
+                for (let i = start; i <= this._step; i++) {
                     this.apply(this._steps[i]);
                 }
                 break;

@@ -6,6 +6,8 @@ library.add(
     solid.faArrows,
     regular.faCircle,
     regular.faSquare,
+    solid.faRotateLeft,
+    solid.faRotateRight,
     solid.faPlus,
     solid.faMinus,
     regular.faTrashCan);

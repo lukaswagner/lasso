@@ -20,6 +20,8 @@ renderer.points = points;
 const move = document.getElementById('move') as HTMLDivElement;
 const circle = document.getElementById('circle') as HTMLDivElement;
 const box = document.getElementById('box') as HTMLDivElement;
+const undo = document.getElementById('undo') as HTMLDivElement;
+const redo = document.getElementById('redo') as HTMLDivElement;
 const plus = document.getElementById('plus') as HTMLDivElement;
 const minus = document.getElementById('minus') as HTMLDivElement;
 const reset = document.getElementById('reset') as HTMLDivElement;
@@ -61,6 +63,9 @@ box.addEventListener('click', modeSwitch.bind(undefined, false));
 
 plus.addEventListener('click', () => lasso.defaultModeIsAdd = true);
 minus.addEventListener('click', () => lasso.defaultModeIsAdd = false);
+
+undo.addEventListener('click', () => lasso.undo());
+redo.addEventListener('click', () => lasso.redo());
 
 // initialize
 circle.click();
