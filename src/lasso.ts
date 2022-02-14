@@ -129,6 +129,15 @@ export class Lasso {
     public set callback(callback: Callback) {
         this._callback = callback;
     }
+
+    public setVerbose(verbose: boolean): Lasso {
+        this.verbose = verbose;
+        return this;
+    }
+
+    public set verbose(verbose: boolean) {
+        window.verbose = verbose;
+    }
     //#endregion configuration
 
     //#region main interface
