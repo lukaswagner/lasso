@@ -8,7 +8,7 @@ const canvas = new Canvas(htmlCanvas, options);
 const renderer = new PointRenderer();
 canvas.renderer = renderer;
 
-const numPoints = 1e3;
+const numPoints = 1e5;
 const points: vec3[] = [];
 const rand = () => Math.random() * 2 - 1;
 for(let i = 0; i < numPoints; i++) {

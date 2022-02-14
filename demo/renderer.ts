@@ -73,6 +73,8 @@ export class PointRenderer extends Renderer {
         this._gl.enableVertexAttribArray(1);
         this._gl.vertexAttribDivisor(1, 0);
 
+        this._gl.enable(this._gl.DEPTH_TEST);
+
         return true;
     }
 
