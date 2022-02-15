@@ -1,4 +1,4 @@
 export enum Shape {
-    Free = 'free',
-    Rect = 'rect'
+    Lasso = 'lasso',
+    Box = 'box'
 }

@@ -1,6 +1,12 @@
 # lasso
 
+Lasso and box select utility for 3D points on a 2D screen. Supports undo and redo.
+
 ## usage
+
+### full example
+
+See [demo/index.ts](./demo/index.ts) for a full example.
 
 ### minimal example
 
@@ -17,7 +23,7 @@ lasso.points = myVec3Array;
 lasso.callback = (sel) => console.log('selection changed');
 // tell lasso how to map 3D points to screen
 lasso.matrix = myViewProjectionMat4;
-// start watching for freeform selection - pass 'rect' for box selection
+// start watching for freeform selection - pass 'box' for box selection
 lasso.enable();
 ```
 
@@ -33,3 +39,12 @@ lasso.add(myPath);
 // fetch selection
 const s = lasso.selection();
 ```
+
+### type of returned selection
+
+There are four options for the type of the selection given to the callback or accessed by calling `.selection()`. This defaults to `intArray` and can be configured using the returnType option.
+
+- `booleanArray`: Array of booleans, mapping each index to whether the point is selected. Note: May use more than 1 byte per boolean due to aligning all contained values to 4 or 8 bytes.
+- `intArray`: An `Uint8Array`, mapping each index to either 0 or 1, where 1 means the point is selected. Guaranteed memory consumption of 1 byte per index. Also, since you're probably using WebGL to render your 3D points, you can directly use this as an vertex attribute.
+- `indexSet`: Set of indices of selected points.
+- `pointsSet`: Set of selected points.

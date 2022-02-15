@@ -22,7 +22,7 @@ export class Lasso {
     protected _callback: Callback;
     protected _defaultModeIsAdd = true;
     protected _invertModifiers: string[] = ['Shift'];
-    protected _shape: Shape = Shape.Free;
+    protected _shape: Shape = Shape.Lasso;
 
     protected _mCache: MatrixCache;
     protected _rCache: ResolutionCache;
@@ -229,10 +229,10 @@ export class Lasso {
         if (this._shape && shape !== this._shape) this.disable();
         this._shape = shape;
         switch (this._shape) {
-            case Shape.Free:
+            case Shape.Lasso:
                 this.enableFree();
                 break;
-            case Shape.Rect:
+            case Shape.Box:
                 this.enableRect();
                 break;
             default:
