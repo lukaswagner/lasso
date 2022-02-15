@@ -1,6 +1,6 @@
 {
   "name": "@lukaswagner/lasso",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "lasso select helper",
   "main": "lib/lasso.js",
   "types": "lib/types/lasso.d.ts",
