@@ -44,7 +44,8 @@ const s = lasso.selection();
 
 There are four options for the type of the selection given to the callback or accessed by calling `.selection()`. This defaults to `intArray` and can be configured using the returnType option.
 
-- `booleanArray`: Array of booleans, mapping each index to whether the point is selected. Note: May use more than 1 byte per boolean due to aligning all contained values to 4 or 8 bytes.
-- `intArray`: An `Uint8Array`, mapping each index to either 0 or 1, where 1 means the point is selected. Guaranteed memory consumption of 1 byte per index. Also, since you're probably using WebGL to render your 3D points, you can directly use this as an vertex attribute.
+- `booleanArray`: Array of booleans, mapping each index to whether the point is selected. May use more than 1 byte per boolean due to aligning all contained values to 4 or 8 bytes.
+- `byteArray`: An `Uint8Array`, mapping each index to either 0 or 1, where 1 means the point is selected. Guaranteed memory consumption of 1 byte per index. Also, since you're probably using WebGL to render your 3D points, you can directly use this as an vertex attribute.
+- `bitArray`: Most compact map option. Stores each point's selection state in a single bit.
 - `indexSet`: Set of indices of selected points.
 - `pointsSet`: Set of selected points.

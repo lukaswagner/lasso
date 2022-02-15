@@ -1,6 +1,7 @@
 export enum ResultType {
     BooleanArray = 'booleanArray',
-    IntArray = 'intArray',
+    ByteArray = 'byteArray',
+    BitArray = 'bitArray',
     IndexSet = 'indexSet',
     PointSet = 'pointSet',
 }

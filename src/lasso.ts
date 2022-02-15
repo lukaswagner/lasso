@@ -34,7 +34,7 @@ export class Lasso {
     protected _listeners: Listeners;
 
     public constructor(options?: Options) {
-        this._resultType = options?.resultType ?? ResultType.BooleanArray;
+        this._resultType = options?.resultType ?? ResultType.ByteArray;
         this._points = options?.points;
         this._target = options?.target;
         this._matrix = options?.matrix ?? mat4.create();
@@ -337,11 +337,14 @@ export class Lasso {
                     result[i] = this._selection.get(i);
                 return result;
             }
-            case ResultType.IntArray: {
+            case ResultType.ByteArray: {
                 const result = new Uint8Array(this._selection.length);
                 for(let i = 0; i < this._selection.length; i++)
                     result[i] = +this._selection.get(i);
                 return result;
+            }
+            case ResultType.BitArray: {
+                return this._selection.clone();
             }
             case ResultType.PointSet: {
                 const result = new Set<vec3>();
@@ -364,3 +367,4 @@ export class Lasso {
 
 export { ResultType } from './types/resultType';
 export { Shape } from './types/shape';
+export { BitArray } from './types/bitArray';

@@ -3,9 +3,9 @@ export class BitArray {
     protected _buffer: ArrayBuffer;
     protected _view: DataView;
 
-    constructor(length: number) {
+    constructor(length: number, buffer?: ArrayBuffer) {
         this._length = length;
-        this._buffer = new ArrayBuffer(Math.ceil(length / 8));
+        this._buffer = buffer ?? new ArrayBuffer(Math.ceil(length / 8));
         this._view = new DataView(this._buffer);
     }
 
@@ -31,5 +31,9 @@ export class BitArray {
 
     public get length(): number {
         return this._length;
+    }
+
+    public clone(): BitArray {
+        return new BitArray(this._length, this._buffer.slice(0));
     }
 }
