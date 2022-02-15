@@ -12,7 +12,8 @@
     "demo:start": "webpack serve --config webpack/demo.mjs --mode development",
     "build": "npm run lib:build",
     "start": "npm run lib:start",
-    "dev": "concurrently npm:lib:watch npm:demo:start"
+    "dev": "concurrently npm:lib:watch npm:demo:start",
+    "prepare": "npm run build"
   },
   "repository": {
     "type": "git",
