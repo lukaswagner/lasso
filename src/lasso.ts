@@ -1,5 +1,5 @@
 import { mat4, vec2, vec3 } from 'gl-matrix';
-import { BitArray } from './types/bitarray';
+import { BitArray } from './types/bitArray';
 import { Callback } from './types/callback';
 import { Listeners } from './types/listeners';
 import { Box, boxToPath, isBox, Mask } from './types/mask';

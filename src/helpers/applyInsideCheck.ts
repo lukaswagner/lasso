@@ -1,5 +1,5 @@
 import { vec2 } from 'gl-matrix';
-import { BitArray } from '../types/bitarray';
+import { BitArray } from '../types/bitArray';
 import { Path } from '../types/mask';
 import { getBoundingBox } from './getBoundingBox';
 import { pointInsidePolygon } from './pointInsidePolygon';
