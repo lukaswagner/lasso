@@ -43,8 +43,7 @@ onlyOne(lower);
 const lasso = new Lasso({
     target: htmlCanvas,
     points,
-    callback: (s: Uint8Array) => renderer.selected = s,
-    resultType: ResultType.IntArray
+    callback: (s: Uint8Array) => renderer.selected = s
 });
 
 // move button enables renderer movement controls and disables lasso
