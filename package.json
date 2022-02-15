@@ -50,5 +50,8 @@
     "webpack-dev-server": "^4.7.4",
     "webpack-glsl-loader": "^1.0.1",
     "webpack-remove-empty-scripts": "^0.7.3"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
