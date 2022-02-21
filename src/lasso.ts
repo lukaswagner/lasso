@@ -362,6 +362,10 @@ export class Lasso {
                 return undefined;
         }
     }
+
+    public setSelection(sel: BitArray): void {
+        this._selection = sel.clone();
+    }
     //#endregion auxiliary interface
 }
 
