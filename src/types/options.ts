@@ -10,5 +10,6 @@ export type Options = {
     matrix?: mat4,
     callback?: Callback,
     defaultModeIsAdd?: boolean,
-    invertModifiers?: string | string[]
+    invertModifiers?: string | string[],
+    drawPath?: boolean,
 }
