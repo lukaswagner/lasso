@@ -8,9 +8,9 @@ Lasso and box select utility for 3D points on a 2D screen. Supports undo and red
 
 See [demo/index.ts](./demo/index.ts) for a full example.
 
-### minimal example
+### example
 
-Minimal usage example for selecting 3D points with integrated mouse event handling. Note that all configuration options can be either set in the constructor (e.g. `new Lasso({target})`), via function (`lasso.setTarget`) or via property (`lasso.target`).
+Usage example for selecting 3D points with integrated mouse event handling. Note that all configuration options can be either set in the constructor (e.g. `new Lasso({target})`), via function (`lasso.setTarget`) or via property (`lasso.target`).
 
 ```ts
 // create lasso instance
@@ -19,6 +19,8 @@ const lasso = new Lasso();
 lasso.target = document.getElementById('canvas');
 // set 3D point source (must implement `at(number): vec3` and `length: number`)
 lasso.points = myVec3Array;
+// visualize currently drawn path
+lasso.drawPath = { style: 'gray', width: 3 };
 // set callback to call if selection changes
 lasso.callback = (sel) => console.log('selection changed');
 // tell lasso how to map 3D points to screen
