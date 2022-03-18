@@ -38,6 +38,10 @@ export class Lasso {
     protected _pathCanvas: HTMLCanvasElement;
     protected _pathContext: CanvasRenderingContext2D;
 
+    /**
+     * Create and initialize lasso instance.
+     * @param options See configuration functions for available options.
+     */
     public constructor(options?: Options) {
         this._resultType = options?.resultType ?? ResultType.ByteArray;
         this._points = options?.points;
@@ -199,15 +203,35 @@ export class Lasso {
     //#endregion internal
 
     //#region configuration
+    /**
+     * Set the format for returned results. Possible values:
+     * - booleanArray: `Array<boolean>`,
+     * mapping each index to whether the point is selected.
+     * - byteArray: An `Uint8Array`, mapping each index to either 0 or 1,
+     * where 1 means the point is selected.
+     * - bitArray: Most compact map option. Stores each point's selection state in a single bit.
+     * - indexSet: Set of indices of selected points.
+     * - bitArray: Set of selected points.
+     * @param resultType String, specifying the desired result format.
+     * @returns The Lasso instance.
+     */
     public setResultType(resultType: ResultType): Lasso {
         this.resultType = resultType;
         return this;
     }
 
+    /**
+     * @see {@link setResultType}
+     */
     public set resultType(resultType: ResultType) {
         this._resultType = resultType;
     }
 
+    /**
+     * Set the source providing the 3D points to be selected.
+     * @param points The points. Must support `.length` and `.at(index)`.
+     * @returns The Lasso instance.
+     */
     public setPoints(points: Source): Lasso {
         this.points = points;
         this._steps = [];
@@ -216,61 +240,120 @@ export class Lasso {
         return this;
     }
 
+    /**
+     * @see {@link setPoints}
+     */
     public set points(points: Source) {
         this._points = points;
         this.reset();
     }
 
+    /**
+     * Set the target for mouse events.
+     * This will probably be a canvas on which you're rendering the points.
+     * @param target An HTMLElement.
+     * @returns The Lasso instance.
+     */
     public setTarget(target: HTMLElement): Lasso {
         this.target = target;
         return this;
     }
 
+    /**
+     * @see {@link setTarget}
+     */
     public set target(target: HTMLElement) {
         this._target = target;
     }
 
+    /**
+     * Set the transformation matrix for mapping the 3D to to 2D as displayed
+     * on the target element.
+     * Usually, this will be your combined model/view/projection matrix.
+     * @param matrix 4x4 transformation matrix.
+     * @returns The Lasso instance.
+     */
     public setMatrix(matrix: mat4): Lasso {
         this.matrix = matrix;
         return this;
     }
 
+    /**
+     * @see {@link setMatrix}
+     */
     public set matrix(matrix: mat4) {
         this._matrix = matrix;
     }
 
+    /**
+     * Set the callback which will be invoked when the selection changes.
+     * The parameters for the function depend on the configured result type.
+     * @param callback The callback function.
+     * @returns The Lasso instance.
+     */
     public setCallback(callback: Callback): Lasso {
         this.callback = callback;
         return this;
     }
 
+    /**
+     * @see {@link setCallback}
+     */
     public set callback(callback: Callback) {
         this._callback = callback;
     }
 
+    /**
+     * Enable/disable verbose logging.
+     * @param verbose Wether verbose logging should be enabled.
+     * @returns The Lasso instance.
+     */
     public setVerbose(verbose: boolean): Lasso {
         this.verbose = verbose;
         return this;
     }
 
+    /**
+     * @see {@link setVerbose}
+     */
     public set verbose(verbose: boolean) {
         window.verbose = verbose;
     }
 
+    /**
+     * Set whether the default selection mode is addition. Enabled by default.
+     * The mode can be inverted using the modifier keys set with
+     * @see {@link setInvertModifiers}
+     * @param add Wether the default selection mode is addition.
+     * @returns The Lasso instance.
+     */
     public setDefaultModeIsAdd(add: boolean): Lasso {
         this.defaultModeIsAdd = add;
         return this;
     }
 
+    /**
+     * @see {@link setDefaultModeIsAdd}
+     */
     public set defaultModeIsAdd(add: boolean) {
         this._defaultModeIsAdd = add;
     }
 
+    /**
+     * Enable/disable/configure visualization of the currently drawn selection.
+     * @param path Boolean for enable/disable or object containing `style` and `width` for detailed configuration.
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/strokeStyle}
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/lineWidth}
+     * @returns The Lasso instance.
+     */
     public setDrawPath(path: boolean | PathStyle): Lasso {
         this.drawPath = path;
         return this;
     }
 
+    /**
+     * @see {@link setDrawPath}
+     */
     public set drawPath(path: boolean | PathStyle) {
         this._drawPath = !!path;
         if(path === undefined || typeof path === 'boolean')
@@ -289,7 +372,11 @@ export class Lasso {
     }
 
     /**
-     * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/getModifierState
+     * Set modifier keys for inverting the default selection mode.
+     * Note that all modifier keys have to be pressed to invert.
+     * @param modifiers String or array of strings containing key codes
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/getModifierState available key codes
+     * @returns The Lasso instance.
      */
     public setInvertModifiers(modifiers: string | string[]): Lasso {
         this.invertModifiers = modifiers;
@@ -297,7 +384,7 @@ export class Lasso {
     }
 
     /**
-     * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/getModifierState
+     * @see {@link setInvertModifiers}
      */
     public set invertModifiers(modifiers: string | string[]) {
         this._invertModifiers =
@@ -306,6 +393,12 @@ export class Lasso {
     //#endregion configuration
 
     //#region main interface
+    /**
+     * Start listening to mouse events.
+     * Make sure `target`, `points` and `matrix` are set correctly.
+     * @param shape `lasso` or `box`. Defaults to last shape, `lasso` initially.
+     * @returns The Lasso instance.
+     */
     public enable(shape: Shape = this._shape): Lasso {
         if (this._listeners && shape === this._shape) return this;
         if (this._shape && shape !== this._shape) this.disable();
@@ -322,8 +415,15 @@ export class Lasso {
         }
         return this;
     }
+    /**
+     * @see {@link enable}
+     */
     public start = this.enable;
 
+    /**
+     * Stop listening to mouse events.
+     * @returns The Lasso instance.
+     */
     public disable(): Lasso {
         if (!this._listeners) return this;
         this._target.removeEventListener('mousedown', this._listeners.down);
@@ -333,23 +433,44 @@ export class Lasso {
         this._listeners = undefined;
         return this;
     }
+    /**
+     * @see {@link disable}
+     */
     public stop = this.disable;
 
+    /**
+     * Reset the selection.
+     * @returns The Lasso instance.
+     */
     public reset(): Lasso {
         this._steps.push({ type: StepType.Rst });
         this.redo();
         return this;
     }
 
+    /**
+     * Redo the last un-done action.
+     * @returns The Lasso instance.
+     */
     public redo(): boolean {
         if(this._step === this._steps.length - 1) return false;
         const step = this._steps[++this._step];
         this.apply(step);
         return true;
     }
+    /**
+     * @see {@link redo}
+     */
     public forward = this.redo;
+    /**
+     * @see {@link redo}
+     */
     public fwd = this.redo;
 
+    /**
+     * Undo the last action.
+     * @returns The Lasso instance.
+     */
     public undo(): boolean {
         if(this._step === 0) return false;
         let step = this._steps[this._step--];
@@ -377,12 +498,26 @@ export class Lasso {
         }
         return true;
     }
+    /**
+     * @see {@link undo}
+     */
     public rewind = this.undo;
+    /**
+     * @see {@link undo}
+     */
     public rwd = this.undo;
+    /**
+     * @see {@link undo}
+     */
     public back = this.undo;
     //#endregion main interface
 
     //#region auxiliary interface
+    /**
+     * Manually add a mask to the selection.
+     * @param mask lasso path or box specifying the mask.
+     * @returns The Lasso instance.
+     */
     public add(mask: Mask): Lasso {
         if(isBox(mask)) mask = boxToPath(mask);
         this.enqueueStep({
@@ -394,6 +529,11 @@ export class Lasso {
         return this;
     }
 
+    /**
+     * Manually subtract a mask from the selection.
+     * @param mask lasso path or box specifying the mask.
+     * @returns The Lasso instance.
+     */
     public subtract(mask: Mask): Lasso {
         if(isBox(mask)) mask = boxToPath(mask);
         this.enqueueStep({
@@ -404,12 +544,22 @@ export class Lasso {
         this.redo();
         return this;
     }
+    /**
+     * @see {@link subtract}
+     */
     public sub = this.subtract;
 
+    /**
+     * Fetch the selection. Returned type based on @see {@link setResultType}.
+     * @returns The selection.
+     */
     public getSelection(): Selection {
         return this.selection;
     }
 
+    /**
+     * @see {@link getSelection}
+     */
     public get selection(): Selection {
         if(!this._selection) return undefined;
         switch (this._resultType) {
@@ -445,13 +595,19 @@ export class Lasso {
         }
     }
 
-    public setSelection(sel: BitArray): void {
-        this._selection = sel.clone();
+    /**
+     * Override the current selection.
+     * @param selection `BitArray` mask specifying which points are selected.
+     */
+    public setSelection(selection: BitArray): void {
+        this._selection = selection.clone();
     }
     //#endregion auxiliary interface
 }
 
+export { BitArray } from './types/bitArray';
+export { Mask, Path, Box } from './types/mask';
+export { Options } from './types/options';
+export { PathStyle } from './types/pathStyle';
 export { ResultType } from './types/resultType';
 export { Shape } from './types/shape';
-export { BitArray } from './types/bitArray';
-export { PathStyle } from './types/pathStyle';
