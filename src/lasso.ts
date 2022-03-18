@@ -277,6 +277,15 @@ export class Lasso {
             this._pathStyle = undefined;
         else
             this._pathStyle = path;
+        if(!this._drawPath) {
+            if(this._pathContext) {
+                this._pathContext = undefined;
+            }
+            if(this._pathCanvas) {
+                this._pathCanvas.remove();
+                this._pathCanvas = undefined;
+            }
+        }
     }
 
     /**
