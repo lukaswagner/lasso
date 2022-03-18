@@ -49,9 +49,7 @@ export class Lasso {
         const mod = options?.invertModifiers;
         if (mod) this._invertModifiers = Array.isArray(mod) ? mod : [mod];
         if(options?.drawPath !== undefined) {
-            this._drawPath = !!options.drawPath;
-            if(typeof options.drawPath !== 'boolean')
-                this._pathStyle = options.drawPath;
+            this.drawPath = options?.drawPath;
         }
         if(this._points) this.reset();
     }
@@ -174,6 +172,7 @@ export class Lasso {
             this._currentPath = [ pos(ev) ];
         }
         const move = (ev: MouseEvent) => {
+            if(!this._currentPath) return;
             const s = this._currentPath[0];
             const e = pos(ev);
             this._pathContext.clearRect(
@@ -265,6 +264,19 @@ export class Lasso {
 
     public set defaultModeIsAdd(add: boolean) {
         this._defaultModeIsAdd = add;
+    }
+
+    public setDrawPath(path: boolean | PathStyle): Lasso {
+        this.drawPath = path;
+        return this;
+    }
+
+    public set drawPath(path: boolean | PathStyle) {
+        this._drawPath = !!path;
+        if(path === undefined || typeof path === 'boolean')
+            this._pathStyle = undefined;
+        else
+            this._pathStyle = path;
     }
 
     /**
@@ -433,3 +445,4 @@ export class Lasso {
 export { ResultType } from './types/resultType';
 export { Shape } from './types/shape';
 export { BitArray } from './types/bitArray';
+export { PathStyle } from './types/pathStyle';
