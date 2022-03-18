@@ -38,6 +38,10 @@ export class Lasso {
     protected _pathCanvas: HTMLCanvasElement;
     protected _pathContext: CanvasRenderingContext2D;
 
+    /**
+     * Create and initialize lasso instance.
+     * @param options See configuration functions for available options.
+     */
     public constructor(options?: Options) {
         this._resultType = options?.resultType ?? ResultType.ByteArray;
         this._points = options?.points;
@@ -601,8 +605,9 @@ export class Lasso {
     //#endregion auxiliary interface
 }
 
+export { BitArray } from './types/bitArray';
+export { Mask, Path, Box } from './types/mask';
+export { Options } from './types/options';
+export { PathStyle } from './types/pathStyle';
 export { ResultType } from './types/resultType';
 export { Shape } from './types/shape';
-export { BitArray } from './types/bitArray';
-export { PathStyle } from './types/pathStyle';
-export { Mask, Path, Box } from './types/mask';
