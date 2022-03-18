@@ -13,6 +13,7 @@ import { mapTo2D } from './helpers/mapTo2D';
 import { applyInsideCheck } from './helpers/applyInsideCheck';
 import { mapToPixels } from './helpers/mapToPixels';
 import { Shape } from './types/shape';
+import { PathStyle } from './types/pathStyle';
 
 export class Lasso {
     protected _resultType: ResultType;
@@ -22,6 +23,8 @@ export class Lasso {
     protected _callback: Callback;
     protected _defaultModeIsAdd = true;
     protected _invertModifiers: string[] = ['Shift'];
+    protected _drawPath: boolean;
+    protected _pathStyle: PathStyle;
     protected _shape: Shape = Shape.Lasso;
 
     protected _mCache: MatrixCache;
@@ -32,6 +35,8 @@ export class Lasso {
 
     protected _currentPath: vec2[];
     protected _listeners: Listeners;
+    protected _pathCanvas: HTMLCanvasElement;
+    protected _pathContext: CanvasRenderingContext2D;
 
     public constructor(options?: Options) {
         this._resultType = options?.resultType ?? ResultType.ByteArray;
@@ -43,6 +48,9 @@ export class Lasso {
             this._defaultModeIsAdd = options?.defaultModeIsAdd;
         const mod = options?.invertModifiers;
         if (mod) this._invertModifiers = Array.isArray(mod) ? mod : [mod];
+        if(options?.drawPath !== undefined) {
+            this.drawPath = options?.drawPath;
+        }
         if(this._points) this.reset();
     }
 
@@ -103,14 +111,52 @@ export class Lasso {
         else this.sub(mask);
     }
 
+    protected prepareCanvas() {
+        if (!this._pathCanvas) {
+            this._pathCanvas = document.createElement('canvas');
+            document.body.appendChild(this._pathCanvas);
+            this._pathCanvas.style.position = 'absolute';
+            this._pathCanvas.style.pointerEvents = 'none';
+            this._pathContext = this._pathCanvas.getContext('2d');
+        }
+        this._pathCanvas.style.left = this._target.clientLeft + 'px';
+        this._pathCanvas.style.top = this._target.clientTop + 'px';
+        this._pathCanvas.width = this._target.clientWidth;
+        this._pathCanvas.height = this._target.clientHeight;
+    }
+
+    protected drawLine(start: vec2, ...points: vec2[]) {
+        if(this._pathStyle) {
+            // setting this in prepare doesn't seem to work properly
+            this._pathContext.strokeStyle = this._pathStyle.style;
+            this._pathContext.lineWidth = this._pathStyle.width;
+        }
+        const y = this._pathCanvas.height;
+        this._pathContext.beginPath();
+        this._pathContext.moveTo(start.at(0), y - start.at(1));
+        points.forEach((p) => this._pathContext.lineTo(p.at(0), y - p.at(1)));
+        this._pathContext.stroke();
+    }
+
     protected enableFree() {
         const pos = (ev: MouseEvent) =>
             vec2.fromValues(ev.x, this._target.clientHeight - ev.y);
-        const down = (ev: MouseEvent) => this._currentPath = [ pos(ev) ];
-        const move =  (ev: MouseEvent) => this._currentPath?.push(pos(ev));
-        const up = (ev: MouseEvent) => {
+        const down = (ev: MouseEvent) => {
+            if(this._drawPath) this.prepareCanvas();
+            this._currentPath = [ pos(ev) ];
+        }
+        const move = (ev: MouseEvent) => {
+            if(!this._currentPath) return;
+            this._currentPath.push(pos(ev));
+            if(this._drawPath) this.drawLine(
+                this._currentPath[this._currentPath.length - 2],
+                this._currentPath[this._currentPath.length - 1]);
+        }
+        const up = async (ev: MouseEvent) => {
             this.chooseAddSub(ev, this._currentPath);
             this._currentPath = undefined;
+            if(this._drawPath) this._pathContext.clearRect(
+                0, 0, this._pathCanvas.width, this._pathCanvas.height);
         }
         this._target.addEventListener('mousedown', down);
         this._target.addEventListener('mousemove', move);
@@ -121,7 +167,18 @@ export class Lasso {
     protected enableRect() {
         const pos = (ev: MouseEvent) =>
             vec2.fromValues(ev.x, this._target.clientHeight - ev.y);
-        const down = (ev: MouseEvent) => this._currentPath = [ pos(ev) ];
+        const down = (ev: MouseEvent) => {
+            if(this._drawPath) this.prepareCanvas();
+            this._currentPath = [ pos(ev) ];
+        }
+        const move = (ev: MouseEvent) => {
+            if(!this._currentPath) return;
+            const s = this._currentPath[0];
+            const e = pos(ev);
+            this._pathContext.clearRect(
+                0, 0, this._pathCanvas.width, this._pathCanvas.height);
+            this.drawLine(s, [s.at(0), e.at(1)], e, [e.at(0), s.at(1)], s);
+        }
         const up = (ev: MouseEvent) => {
             const p = this._currentPath;
             this._currentPath = undefined;
@@ -131,10 +188,13 @@ export class Lasso {
                 x: start[0], y: start[1],
                 width: size[0], height: size[1]
             });
+            if(this._drawPath) this._pathContext.clearRect(
+                0, 0, this._pathCanvas.width, this._pathCanvas.height);
         }
         this._target.addEventListener('mousedown', down);
+        if(this._drawPath) this._target.addEventListener('mousemove', move);
         this._target.addEventListener('mouseup', up);
-        this._listeners = { down, move: undefined, up };
+        this._listeners = { down, move, up };
     }
     //#endregion internal
 
@@ -206,6 +266,28 @@ export class Lasso {
         this._defaultModeIsAdd = add;
     }
 
+    public setDrawPath(path: boolean | PathStyle): Lasso {
+        this.drawPath = path;
+        return this;
+    }
+
+    public set drawPath(path: boolean | PathStyle) {
+        this._drawPath = !!path;
+        if(path === undefined || typeof path === 'boolean')
+            this._pathStyle = undefined;
+        else
+            this._pathStyle = path;
+        if(!this._drawPath) {
+            if(this._pathContext) {
+                this._pathContext = undefined;
+            }
+            if(this._pathCanvas) {
+                this._pathCanvas.remove();
+                this._pathCanvas = undefined;
+            }
+        }
+    }
+
     /**
      * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/getModifierState
      */
@@ -224,7 +306,7 @@ export class Lasso {
     //#endregion configuration
 
     //#region main interface
-    public enable(shape: Shape = this._shape): Lasso{
+    public enable(shape: Shape = this._shape): Lasso {
         if (this._listeners && shape === this._shape) return this;
         if (this._shape && shape !== this._shape) this.disable();
         this._shape = shape;
@@ -372,3 +454,4 @@ export class Lasso {
 export { ResultType } from './types/resultType';
 export { Shape } from './types/shape';
 export { BitArray } from './types/bitArray';
+export { PathStyle } from './types/pathStyle';

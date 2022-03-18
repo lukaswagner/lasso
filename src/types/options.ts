@@ -1,5 +1,6 @@
 import { mat4 } from 'gl-matrix';
 import { Callback } from './callback';
+import { PathStyle } from './pathStyle';
 import { ResultType } from './resultType';
 import { Source } from './source';
 
@@ -10,5 +11,6 @@ export type Options = {
     matrix?: mat4,
     callback?: Callback,
     defaultModeIsAdd?: boolean,
-    invertModifiers?: string | string[]
+    invertModifiers?: string | string[],
+    drawPath?: boolean | PathStyle,
 }
