@@ -13,6 +13,7 @@ import { mapTo2D } from './helpers/mapTo2D';
 import { applyInsideCheck } from './helpers/applyInsideCheck';
 import { mapToPixels } from './helpers/mapToPixels';
 import { Shape } from './types/shape';
+import { PathStyle } from './types/pathStyle';
 
 export class Lasso {
     protected _resultType: ResultType;
@@ -23,6 +24,7 @@ export class Lasso {
     protected _defaultModeIsAdd = true;
     protected _invertModifiers: string[] = ['Shift'];
     protected _drawPath: boolean;
+    protected _pathStyle: PathStyle;
     protected _shape: Shape = Shape.Lasso;
 
     protected _mCache: MatrixCache;
@@ -46,7 +48,11 @@ export class Lasso {
             this._defaultModeIsAdd = options?.defaultModeIsAdd;
         const mod = options?.invertModifiers;
         if (mod) this._invertModifiers = Array.isArray(mod) ? mod : [mod];
-        this._drawPath = options?.drawPath;
+        if(options?.drawPath !== undefined) {
+            this._drawPath = !!options.drawPath;
+            if(typeof options.drawPath !== 'boolean')
+                this._pathStyle = options.drawPath;
+        }
         if(this._points) this.reset();
     }
 
@@ -122,6 +128,11 @@ export class Lasso {
     }
 
     protected drawLine(start: vec2, ...points: vec2[]) {
+        if(this._pathStyle) {
+            // setting this in prepare doesn't seem to work properly
+            this._pathContext.strokeStyle = this._pathStyle.style;
+            this._pathContext.lineWidth = this._pathStyle.width;
+        }
         const y = this._pathCanvas.height;
         this._pathContext.beginPath();
         this._pathContext.moveTo(start.at(0), y - start.at(1));
@@ -184,7 +195,7 @@ export class Lasso {
         this._target.addEventListener('mousedown', down);
         if(this._drawPath) this._target.addEventListener('mousemove', move);
         this._target.addEventListener('mouseup', up);
-        this._listeners = { down, move: undefined, up };
+        this._listeners = { down, move, up };
     }
     //#endregion internal
 
