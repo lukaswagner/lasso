@@ -509,6 +509,11 @@ export class Lasso {
     //#endregion main interface
 
     //#region auxiliary interface
+    /**
+     * Manually add a mask to the selection.
+     * @param mask lasso path or box specifying the mask.
+     * @returns The Lasso instance.
+     */
     public add(mask: Mask): Lasso {
         if(isBox(mask)) mask = boxToPath(mask);
         this.enqueueStep({
@@ -520,6 +525,11 @@ export class Lasso {
         return this;
     }
 
+    /**
+     * Manually subtract a mask from the selection.
+     * @param mask lasso path or box specifying the mask.
+     * @returns The Lasso instance.
+     */
     public subtract(mask: Mask): Lasso {
         if(isBox(mask)) mask = boxToPath(mask);
         this.enqueueStep({
@@ -530,12 +540,22 @@ export class Lasso {
         this.redo();
         return this;
     }
+    /**
+     * @see {@link subtract}
+     */
     public sub = this.subtract;
 
+    /**
+     * Fetch the selection. Returned type based on @see {@link setResultType}.
+     * @returns The selection.
+     */
     public getSelection(): Selection {
         return this.selection;
     }
 
+    /**
+     * @see {@link getSelection}
+     */
     public get selection(): Selection {
         if(!this._selection) return undefined;
         switch (this._resultType) {
@@ -571,8 +591,12 @@ export class Lasso {
         }
     }
 
-    public setSelection(sel: BitArray): void {
-        this._selection = sel.clone();
+    /**
+     * Override the current selection.
+     * @param selection `BitArray` mask specifying which points are selected.
+     */
+    public setSelection(selection: BitArray): void {
+        this._selection = selection.clone();
     }
     //#endregion auxiliary interface
 }
@@ -581,3 +605,4 @@ export { ResultType } from './types/resultType';
 export { Shape } from './types/shape';
 export { BitArray } from './types/bitArray';
 export { PathStyle } from './types/pathStyle';
+export { Mask, Path, Box } from './types/mask';
