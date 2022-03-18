@@ -199,15 +199,35 @@ export class Lasso {
     //#endregion internal
 
     //#region configuration
+    /**
+     * Set the format for returned results. Possible values:
+     * - booleanArray: `Array<boolean>`,
+     * mapping each index to whether the point is selected.
+     * - byteArray: An `Uint8Array`, mapping each index to either 0 or 1,
+     * where 1 means the point is selected.
+     * - bitArray: Most compact map option. Stores each point's selection state in a single bit.
+     * - indexSet: Set of indices of selected points.
+     * - bitArray: Set of selected points.
+     * @param resultType String, specifying the desired result format.
+     * @returns The Lasso instance.
+     */
     public setResultType(resultType: ResultType): Lasso {
         this.resultType = resultType;
         return this;
     }
 
+    /**
+     * @see {@link setResultType}
+     */
     public set resultType(resultType: ResultType) {
         this._resultType = resultType;
     }
 
+    /**
+     * Set the source providing the 3D points to be selected.
+     * @param points The points. Must support `.length` and `.at(index)`.
+     * @returns The Lasso instance.
+     */
     public setPoints(points: Source): Lasso {
         this.points = points;
         this._steps = [];
@@ -216,61 +236,120 @@ export class Lasso {
         return this;
     }
 
+    /**
+     * @see {@link setPoints}
+     */
     public set points(points: Source) {
         this._points = points;
         this.reset();
     }
 
+    /**
+     * Set the target for mouse events.
+     * This will probably be a canvas on which you're rendering the points.
+     * @param target An HTMLElement.
+     * @returns The Lasso instance.
+     */
     public setTarget(target: HTMLElement): Lasso {
         this.target = target;
         return this;
     }
 
+    /**
+     * @see {@link setTarget}
+     */
     public set target(target: HTMLElement) {
         this._target = target;
     }
 
+    /**
+     * Set the transformation matrix for mapping the 3D to to 2D as displayed
+     * on the target element.
+     * Usually, this will be your combined model/view/projection matrix.
+     * @param matrix 4x4 transformation matrix.
+     * @returns The Lasso instance.
+     */
     public setMatrix(matrix: mat4): Lasso {
         this.matrix = matrix;
         return this;
     }
 
+    /**
+     * @see {@link setMatrix}
+     */
     public set matrix(matrix: mat4) {
         this._matrix = matrix;
     }
 
+    /**
+     * Set the callback which will be invoked when the selection changes.
+     * The parameters for the function depend on the configured result type.
+     * @param callback The callback function.
+     * @returns The Lasso instance.
+     */
     public setCallback(callback: Callback): Lasso {
         this.callback = callback;
         return this;
     }
 
+    /**
+     * @see {@link setCallback}
+     */
     public set callback(callback: Callback) {
         this._callback = callback;
     }
 
+    /**
+     * Enable/disable verbose logging.
+     * @param verbose Wether verbose logging should be enabled.
+     * @returns The Lasso instance.
+     */
     public setVerbose(verbose: boolean): Lasso {
         this.verbose = verbose;
         return this;
     }
 
+    /**
+     * @see {@link setVerbose}
+     */
     public set verbose(verbose: boolean) {
         window.verbose = verbose;
     }
 
+    /**
+     * Set whether the default selection mode is addition. Enabled by default.
+     * The mode can be inverted using the modifier keys set with
+     * @see {@link setInvertModifiers}
+     * @param add Wether the default selection mode is addition.
+     * @returns The Lasso instance.
+     */
     public setDefaultModeIsAdd(add: boolean): Lasso {
         this.defaultModeIsAdd = add;
         return this;
     }
 
+    /**
+     * @see {@link setDefaultModeIsAdd}
+     */
     public set defaultModeIsAdd(add: boolean) {
         this._defaultModeIsAdd = add;
     }
 
+    /**
+     * Enable/disable/configure visualization of the currently drawn selection.
+     * @param path Boolean for enable/disable or object containing `style` and `width` for detailed configuration.
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/strokeStyle}
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/lineWidth}
+     * @returns The Lasso instance.
+     */
     public setDrawPath(path: boolean | PathStyle): Lasso {
         this.drawPath = path;
         return this;
     }
 
+    /**
+     * @see {@link setDrawPath}
+     */
     public set drawPath(path: boolean | PathStyle) {
         this._drawPath = !!path;
         if(path === undefined || typeof path === 'boolean')
@@ -289,7 +368,11 @@ export class Lasso {
     }
 
     /**
-     * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/getModifierState
+     * Set modifier keys for inverting the default selection mode.
+     * Note that all modifier keys have to be pressed to invert.
+     * @param modifiers String or array of strings containing key codes
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/getModifierState available key codes
+     * @returns The Lasso instance.
      */
     public setInvertModifiers(modifiers: string | string[]): Lasso {
         this.invertModifiers = modifiers;
@@ -297,7 +380,7 @@ export class Lasso {
     }
 
     /**
-     * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/getModifierState
+     * @see {@link setInvertModifiers}
      */
     public set invertModifiers(modifiers: string | string[]) {
         this._invertModifiers =
