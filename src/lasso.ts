@@ -389,6 +389,12 @@ export class Lasso {
     //#endregion configuration
 
     //#region main interface
+    /**
+     * Start listening to mouse events.
+     * Make sure `target`, `points` and `matrix` are set correctly.
+     * @param shape `lasso` or `box`. Defaults to last shape, `lasso` initially.
+     * @returns The Lasso instance.
+     */
     public enable(shape: Shape = this._shape): Lasso {
         if (this._listeners && shape === this._shape) return this;
         if (this._shape && shape !== this._shape) this.disable();
@@ -405,8 +411,15 @@ export class Lasso {
         }
         return this;
     }
+    /**
+     * @see {@link enable}
+     */
     public start = this.enable;
 
+    /**
+     * Stop listening to mouse events.
+     * @returns The Lasso instance.
+     */
     public disable(): Lasso {
         if (!this._listeners) return this;
         this._target.removeEventListener('mousedown', this._listeners.down);
@@ -416,23 +429,44 @@ export class Lasso {
         this._listeners = undefined;
         return this;
     }
+    /**
+     * @see {@link disable}
+     */
     public stop = this.disable;
 
+    /**
+     * Reset the selection.
+     * @returns The Lasso instance.
+     */
     public reset(): Lasso {
         this._steps.push({ type: StepType.Rst });
         this.redo();
         return this;
     }
 
+    /**
+     * Redo the last un-done action.
+     * @returns The Lasso instance.
+     */
     public redo(): boolean {
         if(this._step === this._steps.length - 1) return false;
         const step = this._steps[++this._step];
         this.apply(step);
         return true;
     }
+    /**
+     * @see {@link redo}
+     */
     public forward = this.redo;
+    /**
+     * @see {@link redo}
+     */
     public fwd = this.redo;
 
+    /**
+     * Undo the last action.
+     * @returns The Lasso instance.
+     */
     public undo(): boolean {
         if(this._step === 0) return false;
         let step = this._steps[this._step--];
@@ -460,8 +494,17 @@ export class Lasso {
         }
         return true;
     }
+    /**
+     * @see {@link undo}
+     */
     public rewind = this.undo;
+    /**
+     * @see {@link undo}
+     */
     public rwd = this.undo;
+    /**
+     * @see {@link undo}
+     */
     public back = this.undo;
     //#endregion main interface
 
