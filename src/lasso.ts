@@ -2,7 +2,7 @@ import { mat4, vec2, vec3 } from 'gl-matrix';
 import { BitArray } from './types/bitArray';
 import { Callback } from './types/callback';
 import { Listeners } from './types/listeners';
-import { Box, boxToPath, isBox, Mask } from './types/mask';
+import { boxToPath, isBox, Mask } from './types/mask';
 import { Options } from './types/options';
 import { ResultType } from './types/resultType';
 import { Selection } from './types/selection';
@@ -14,6 +14,7 @@ import { applyInsideCheck } from './helpers/applyInsideCheck';
 import { mapToPixels } from './helpers/mapToPixels';
 import { Shape } from './types/shape';
 import { PathStyle } from './types/pathStyle';
+import { applyImageBasedCheck } from './helpers/applyImageBasedCheck';
 
 export class Lasso {
     protected _resultType: ResultType;
@@ -82,14 +83,16 @@ export class Lasso {
             }
         }
 
+        // threshold approximated by testing - should run precise perf test
+        const func = this._rCache.points.length > 5e4 ?
+            applyImageBasedCheck : applyInsideCheck;
+
         switch (step.type) {
             case StepType.Add:
-                applyInsideCheck(
-                    this._rCache.points, step.mask, this._selection, true);
+                func(this._rCache.points, step.mask, this._selection, true);
                 break;
             case StepType.Sub:
-                applyInsideCheck(
-                    this._rCache.points, step.mask, this._selection, false);
+                func(this._rCache.points, step.mask, this._selection, false);
                 break;
             case StepType.Rst:
                 this._selection = new BitArray(this._points.length);
