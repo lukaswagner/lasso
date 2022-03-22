@@ -1,18 +1,20 @@
 import { vec2 } from 'gl-matrix';
 import { BitArray } from '../../types/bitArray';
-import { Path } from '../../types/mask';
+import { isBox, Mask } from '../../types/mask';
 import { rasterizePath } from '../rasterizePath';
 
 export function imageCheck(
-    points: vec2[], path: Path, selection: BitArray, value: boolean
+    points: vec2[], mask: Mask, selection: BitArray, value: boolean
 ): void {
+    if (isBox(mask)) throw new Error('Mask needs to be path.');
+
     if (window.verbose) {
         console.log('image based selection check');
-        console.log('path:', path);
+        console.log('path:', mask);
         console.log('input:', points);
     }
 
-    const bmp = rasterizePath(path);
+    const bmp = rasterizePath(mask);
     points.forEach((p, i) => {
         const x = Math.round(p.at(0));
         const y = Math.round(p.at(1));
