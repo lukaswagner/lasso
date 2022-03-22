@@ -1,9 +1,9 @@
 import { vec2 } from 'gl-matrix';
-import { BitArray } from '../types/bitArray';
-import { Path } from '../types/mask';
-import { rasterizePath } from './rasterizePath';
+import { BitArray } from '../../types/bitArray';
+import { Path } from '../../types/mask';
+import { rasterizePath } from '../rasterizePath';
 
-export function applyImageBasedCheck(
+export function imageCheck(
     points: vec2[], path: Path, selection: BitArray, value: boolean
 ): void {
     if (window.verbose) {

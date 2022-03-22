@@ -1,10 +1,10 @@
 import { vec2 } from 'gl-matrix';
-import { BitArray } from '../types/bitArray';
-import { Path } from '../types/mask';
-import { getBoundingBox } from './getBoundingBox';
-import { pointInsidePolygon } from './pointInsidePolygon';
+import { BitArray } from '../../types/bitArray';
+import { Path } from '../../types/mask';
+import { getBoundingBox } from '../getBoundingBox';
+import { pointInsidePolygon } from '../pointInsidePolygon';
 
-export function applyInsideCheck(
+export function polygonCheck(
     points: vec2[], path: Path, selection: BitArray, value: boolean
 ): void {
     if (window.verbose) {

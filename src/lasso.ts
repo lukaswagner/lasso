@@ -10,11 +10,11 @@ import { Source } from './types/source';
 import { Step, StepType } from './types/step';
 import { MatrixCache, ResolutionCache } from './types/cache';
 import { mapTo2D } from './helpers/mapTo2D';
-import { applyInsideCheck } from './helpers/applyInsideCheck';
+import { polygonCheck } from './helpers/checks/polygon';
 import { mapToPixels } from './helpers/mapToPixels';
 import { Shape } from './types/shape';
 import { PathStyle } from './types/pathStyle';
-import { applyImageBasedCheck } from './helpers/applyImageBasedCheck';
+import { imageCheck } from './helpers/checks/image';
 import { Algorithm } from './types/algorithm';
 import { lookup } from './lookup/lookup';
 
@@ -84,12 +84,11 @@ export class Lasso {
                 const algo = this.accessLookup(pathLength);
                 if(window.verbose) console.timeEnd('lookup');
                 if(window.verbose) console.log('better algorithm: ' + algo);
-                return algo === Algorithm.Image ?
-                    applyImageBasedCheck : applyInsideCheck;
+                return algo === Algorithm.Image ? imageCheck : polygonCheck;
             case Algorithm.Polygon:
-                return applyInsideCheck;
+                return polygonCheck;
             case Algorithm.Image:
-                return applyImageBasedCheck;
+                return imageCheck;
             default:
                 console.error('Invalid algorithm: ' + this._algorithm)
                 return undefined;
