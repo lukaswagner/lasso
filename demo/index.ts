@@ -1,6 +1,7 @@
-import { Canvas, vec3 } from 'webgl-operate';
+import { Canvas } from 'webgl-operate';
 import { PointRenderer } from './renderer';
-import { Lasso, ResultType, Shape } from '..';
+import { Lasso, Shape } from '..';
+import { vec3 } from 'gl-matrix';
 
 // renderer setup
 const htmlCanvas = document.getElementById('canvas') as HTMLCanvasElement;
