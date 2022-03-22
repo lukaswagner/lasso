@@ -2,7 +2,7 @@ import { mat4, vec2, vec3 } from 'gl-matrix';
 import { BitArray } from './types/bitArray';
 import { Callback } from './types/callback';
 import { Listeners } from './types/listeners';
-import { boxToPath, isBox, Mask, Path } from './types/mask';
+import { isBox, Mask } from './types/mask';
 import { Options } from './types/options';
 import { ResultType } from './types/resultType';
 import { Selection } from './types/selection';
@@ -10,13 +10,14 @@ import { Source } from './types/source';
 import { Step, StepType } from './types/step';
 import { MatrixCache, ResolutionCache } from './types/cache';
 import { mapTo2D } from './helpers/mapTo2D';
-import { applyInsideCheck } from './helpers/applyInsideCheck';
+import { polygonCheck } from './helpers/checks/polygon';
 import { mapToPixels } from './helpers/mapToPixels';
 import { Shape } from './types/shape';
 import { PathStyle } from './types/pathStyle';
-import { applyImageBasedCheck } from './helpers/applyImageBasedCheck';
+import { imageCheck } from './helpers/checks/image';
 import { Algorithm } from './types/algorithm';
 import { lookup } from './lookup/lookup';
+import { boxCheck } from './helpers/checks/box';
 
 export class Lasso {
     protected _resultType: ResultType;
@@ -76,20 +77,21 @@ export class Lasso {
         return algo;
     }
 
-    protected getAlgorithm(pathLength: number) {
+    protected getAlgorithm(mask: Mask) {
+        if(isBox(mask)) return boxCheck;
+
         switch (this._algorithm) {
             // threshold approximated by testing - should run precise perf test
             case Algorithm.Auto:
                 if(window.verbose) console.time('lookup');
-                const algo = this.accessLookup(pathLength);
+                const algo = this.accessLookup(mask.length);
                 if(window.verbose) console.timeEnd('lookup');
                 if(window.verbose) console.log('better algorithm: ' + algo);
-                return algo === Algorithm.Image ?
-                    applyImageBasedCheck : applyInsideCheck;
+                return algo === Algorithm.Image ? imageCheck : polygonCheck;
             case Algorithm.Polygon:
-                return applyInsideCheck;
+                return polygonCheck;
             case Algorithm.Image:
-                return applyImageBasedCheck;
+                return imageCheck;
             default:
                 console.error('Invalid algorithm: ' + this._algorithm)
                 return undefined;
@@ -122,11 +124,11 @@ export class Lasso {
         if(window.verbose) console.time('apply');
         switch (step.type) {
             case StepType.Add:
-                this.getAlgorithm(step.mask.length)(
+                this.getAlgorithm(step.mask)(
                     this._rCache.points, step.mask, this._selection, true);
                 break;
             case StepType.Sub:
-                this.getAlgorithm(step.mask.length)(
+                this.getAlgorithm(step.mask)(
                     this._rCache.points, step.mask, this._selection, false);
                 break;
             case StepType.Rst:
@@ -577,7 +579,6 @@ export class Lasso {
      * @returns The Lasso instance.
      */
     public add(mask: Mask): Lasso {
-        if(isBox(mask)) mask = boxToPath(mask);
         this.enqueueStep({
             type: StepType.Add,
             matrix: this._matrix,
@@ -593,7 +594,6 @@ export class Lasso {
      * @returns The Lasso instance.
      */
     public subtract(mask: Mask): Lasso {
-        if(isBox(mask)) mask = boxToPath(mask);
         this.enqueueStep({
             type: StepType.Sub,
             matrix: this._matrix,
