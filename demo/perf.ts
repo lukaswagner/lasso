@@ -2,10 +2,15 @@ import { Camera } from 'webgl-operate';
 import { Algorithm, BitArray, Lasso, ResultType } from '..';
 import { vec2, vec3 } from 'gl-matrix';
 
+declare class Chart {
+    constructor(elem: HTMLElement, conf: Object)
+}
+
 type Config = {
     points: number;
     path: number;
-    resolution: number;
+    width: number,
+    height: number,
     algorithm: Algorithm;
     pass: number;
 }
@@ -27,47 +32,48 @@ const start = document.getElementById('start') as HTMLButtonElement;
 const progressNumber = document.getElementById('progNum') as HTMLSpanElement;
 const progressBar = document.getElementById('progBar') as HTMLProgressElement;
 
-const points = samples(1e2, 1e5, 5)
-    .map((v) => { return { points: v }});
-const path = samples(1e1, 5e2, 5)
-    .map((v) => { return { path: v }});
-const resolution = samples(1e2, 1e3, 5)
-    .map((v) => { return { resolution: v }});
-const algorithm = [Algorithm.Polygon, Algorithm.Image]
-    .map((v) => { return { algorithm: v }});
+const points = [1e2, 5e2, 1e3, 5e3, 1e4, 5e4, 1e5, 5e5];
+const path = [1e1, 25e0, 5e1, 1e2, 25e1, 5e2, 1e3];
+const resolution = [
+    [200, 200],
+    [500, 500],
+    [800, 600],
+    [1280, 720],
+    [1920, 1080],
+    [2560, 1440],
+    [3840, 2160]
+];
+const algorithm = [Algorithm.Polygon, Algorithm.Image];
 const warmupPasses = 0;
 const benchmarkPasses = 1;
 const passes: { pass: number }[] = [];
 for(let i = -warmupPasses; i < 0; i++) passes.push({ pass: i });
 for(let i = 0; i < benchmarkPasses; i++) passes.push({ pass: i });
 
+console.table(points);
+console.table(path);
+console.table(resolution);
+console.table(
+    'combinations: ' +
+    (points.length * path.length * resolution.length * algorithm.length));
+
 const configs: Config[] = [{}]
-    .map((c) => points.map((v) => Object.assign({}, c, v))).flat()
-    .map((c) => path.map((v) => Object.assign({}, c, v))).flat()
-    .map((c) => resolution.map((v) => Object.assign({}, c, v))).flat()
-    .map((c) => algorithm.map((v) => Object.assign({}, c, v))).flat()
-    .map((c) => passes.map((v) => Object.assign({}, c, v))).flat();
+    .map((c) => points.map((v) => Object.assign({}, c,  { points: v })))
+    .flat()
+    .map((c) => path.map((v) => Object.assign({}, c, { path: v })))
+    .flat()
+    .map((c) => resolution.map((v) => Object.assign({}, c,
+        { width: v.at(0), height: v.at(1) })))
+    .flat()
+    .map((c) => algorithm.map((v) => Object.assign({}, c, { algorithm: v })))
+    .flat()
+    .map((c) => passes.map((v) => Object.assign({}, c, v)))
+    .flat();
 
 progressBar.max = configs.length - 1;
 progressBar.value = 0;
 
-function toCSV(data: Sample[]) {
-    const keys = Object.keys(data[0]) as (keyof Sample)[];
-    let str = keys.join(',') + '\n';
-    for (const d of data) {
-        keys.forEach((k, i, a) => {
-            let s = d[k]?.toString() ?? '';
-            if (s.includes(',')) {
-                s = s.replaceAll('"', '\\"');
-                s = '"' + s + '"';
-            }
-            str = str.concat(s);
-            if (i < a.length - 1) str = str.concat(',');
-        });
-        str = str.concat('\n');
-    }
-    return str;
-}
+start.onclick = run;
 
 async function run() {
     const start = Date.now();
@@ -87,10 +93,10 @@ async function run() {
         const config = configs[i];
 
         // apply resolution
-        canvas.width = config.resolution;
-        canvas.height = config.resolution;
-        camera.viewport = [config.resolution, config.resolution];
-        camera.aspect = config.resolution / config.resolution;
+        canvas.width = config.width;
+        canvas.height = config.height;
+        camera.viewport = [config.width, config.height];
+        camera.aspect = config.width / config.height;
 
         // create random points
         const points: vec3[] = [];
@@ -109,15 +115,17 @@ async function run() {
         });
 
         // generate path
-        const center = config.resolution / 2;
-        const radius = config.resolution / 2 * 0.8;
+        const xCenter = config.width / 2;
+        const xRadius = config.width / 2 * 0.8;
+        const yCenter = config.height / 2;
+        const yRadius = config.height / 2 * 0.8;
         const angleStep = Math.PI * 2 / config.path;
         const path: vec2[] = [];
         for(let i = 0; i < config.path; i++) {
             const angle = i * angleStep;
             path.push(vec2.fromValues(
-                center + radius * Math.cos(angle),
-                center + radius * Math.sin(angle)));
+                xCenter + xRadius * Math.cos(angle),
+                yCenter + yRadius * Math.sin(angle)));
         }
 
         const start = Date.now();
@@ -137,13 +145,14 @@ async function run() {
         results.push(sample);
 
         const left =
-            config.points.toString().padStart(6) + ' / ' +
+            config.points.toString().padStart(7) + ' / ' +
             config.path.toString().padStart(3) + ' / ' +
-            config.resolution.toString().padStart(4) + ' / ' +
+            config.width.toString().padStart(4) + ' / ' +
+            config.height.toString().padStart(4) + ' / ' +
             config.algorithm.padStart(7) + ' / ' +
             config.pass.toString().padStart(2);
         const right =
-            sample.time.toString().padStart(4) + ' / ' +
+            sample.time.toString().padStart(5) + ' / ' +
             (selectedRatio * 100).toPrecision(4) + '%';
         console.log(left + ' -> ' + right);
 
@@ -154,9 +163,97 @@ async function run() {
 
     canvas.remove();
 
-    console.log(toCSV(results));
     const end = Date.now();
     console.log('Total time: ' + ((end - start) / 1000).toFixed(3) + 's');
+
+    graph(results);
 }
 
-start.onclick = run;
+function graph(data: Sample[]) {
+    const refPoints = 1e5;
+    const refPath = 1e2;
+    const refRes = [1920, 1080];
+
+    const getData = (
+        key: 'points' | 'path' | 'width',
+        labels: number[],
+        filter: (v: Sample) => boolean
+    ) => {
+        return algorithm.map((a, i) => {
+            const m = new Map<number, { sum: number, count: number }>();
+            data.filter((v) => filter(v) && v.algorithm === a
+            ).forEach((s) => {
+                const entry = m.get(s[key]) ?? { sum: 0, count: 0 };
+                entry.sum += s.time;
+                entry.count++;
+                m.set(s[key], entry);
+            });
+            return {
+                label: a,
+                borderColor: ['red', 'blue'][i],
+                data: labels.map((v) => m.get(v).sum / m.get(v).count)
+            }
+        });
+    }
+
+    const pointsDatasets = getData(
+        'points',
+        points,
+        (v) => v.path === refPath && v.width === refRes.at(0)
+    );
+    new Chart(document.getElementById('chartPoints'), {
+        type: 'line',
+        data: { labels: points, datasets: pointsDatasets },
+        options: {
+            plugins: { title: { display: true, text:
+                'selection time to number of points - \n' +
+                `#vertices: ${refPath}, resolution: ${refRes.at(0)}x${refRes.at(1)}`
+            }},
+            scales: {
+                x: { title: { display: true, text: 'number of points' }},
+                y: { title: { display: true, text: 'time in ms' }}
+            }
+        }
+    });
+
+    const pathDatasets = getData(
+        'path',
+        path,
+        (v) => v.points === refPoints && v.width === refRes.at(0)
+    );
+    new Chart(document.getElementById('chartPath'), {
+        type: 'line',
+        data: { labels: path, datasets: pathDatasets },
+        options: {
+            plugins: { title: { display: true, text:
+                'selection time to number of path vertices - \n' +
+                `#points: ${refPoints}, resolution: ${refRes.at(0)}x${refRes.at(1)}`
+            }},
+            scales: {
+                x: { title: { display: true, text: 'number of path vertices' }},
+                y: { title: { display: true, text: 'time in ms' }}
+            }
+        }
+    });
+
+    const resolutionLabels = resolution.map((v) => `${v.at(0)}x${v.at(1)}`);
+    const resolutionDatasets = getData(
+        'width',
+        resolution.map((v) => v.at(0)),
+        (v) => v.points === refPoints && v.path === refPath
+    );
+    new Chart(document.getElementById('chartResolution'), {
+        type: 'line',
+        data: { labels: resolutionLabels, datasets: resolutionDatasets },
+        options: {
+            plugins: { title: { display: true, text:
+                'selection time to canvas resolution - \n' +
+                `#points: ${refPoints}, #vertices: ${refPath}`
+            }},
+            scales: {
+                x: { title: { display: true, text: 'canvas resolution' }},
+                y: { title: { display: true, text: 'time in ms' }}
+            }
+        }
+    });
+}
