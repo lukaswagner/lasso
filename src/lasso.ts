@@ -2,7 +2,7 @@ import { mat4, vec2, vec3 } from 'gl-matrix';
 import { BitArray } from './types/bitArray';
 import { Callback } from './types/callback';
 import { Listeners } from './types/listeners';
-import { Box, boxToPath, isBox, Mask } from './types/mask';
+import { boxToPath, isBox, Mask, Path } from './types/mask';
 import { Options } from './types/options';
 import { ResultType } from './types/resultType';
 import { Selection } from './types/selection';
@@ -14,6 +14,9 @@ import { applyInsideCheck } from './helpers/applyInsideCheck';
 import { mapToPixels } from './helpers/mapToPixels';
 import { Shape } from './types/shape';
 import { PathStyle } from './types/pathStyle';
+import { applyImageBasedCheck } from './helpers/applyImageBasedCheck';
+import { Algorithm } from './types/algorithm';
+import { lookup } from './lookup/lookup';
 
 export class Lasso {
     protected _resultType: ResultType;
@@ -25,6 +28,7 @@ export class Lasso {
     protected _invertModifiers: string[] = ['Shift'];
     protected _drawPath: boolean;
     protected _pathStyle: PathStyle;
+    protected _algorithm: Algorithm;
     protected _shape: Shape = Shape.Lasso;
 
     protected _mCache: MatrixCache;
@@ -43,6 +47,7 @@ export class Lasso {
      * @param options See configuration functions for available options.
      */
     public constructor(options?: Options) {
+        if(options?.verbose) this.verbose = true;
         this._resultType = options?.resultType ?? ResultType.ByteArray;
         this._points = options?.points;
         this._target = options?.target;
@@ -55,10 +60,42 @@ export class Lasso {
         if(options?.drawPath !== undefined) {
             this.drawPath = options?.drawPath;
         }
+        this._algorithm = options?.algorithm ?? Algorithm.Auto;
         if(this._points) this.reset();
     }
 
     //#region internal
+    protected accessLookup(pathLength: number) {
+        const pixel = this._target.clientWidth * this._target.clientHeight;
+        if(window.verbose)
+            console.log('lookup', this._points.length, pathLength, pixel);
+        const lookupResult = lookup(this._points.length, pathLength, pixel);
+        if(window.verbose) console.table(lookupResult);
+        const algo = lookupResult
+            .sort((a, b) => a.value - b.value)[0].algorithm;
+        return algo;
+    }
+
+    protected getAlgorithm(pathLength: number) {
+        switch (this._algorithm) {
+            // threshold approximated by testing - should run precise perf test
+            case Algorithm.Auto:
+                if(window.verbose) console.time('lookup');
+                const algo = this.accessLookup(pathLength);
+                if(window.verbose) console.timeEnd('lookup');
+                if(window.verbose) console.log('better algorithm: ' + algo);
+                return algo === Algorithm.Image ?
+                    applyImageBasedCheck : applyInsideCheck;
+            case Algorithm.Polygon:
+                return applyInsideCheck;
+            case Algorithm.Image:
+                return applyImageBasedCheck;
+            default:
+                console.error('Invalid algorithm: ' + this._algorithm)
+                return undefined;
+        }
+    }
+
     protected apply(step: Step): void {
         let mCacheUpdated = false;
         if (this._mCache?.matrix !== this._matrix) {
@@ -82,13 +119,14 @@ export class Lasso {
             }
         }
 
+        if(window.verbose) console.time('apply');
         switch (step.type) {
             case StepType.Add:
-                applyInsideCheck(
+                this.getAlgorithm(step.mask.length)(
                     this._rCache.points, step.mask, this._selection, true);
                 break;
             case StepType.Sub:
-                applyInsideCheck(
+                this.getAlgorithm(step.mask.length)(
                     this._rCache.points, step.mask, this._selection, false);
                 break;
             case StepType.Rst:
@@ -97,6 +135,7 @@ export class Lasso {
             default:
                 break;
         }
+        if(window.verbose) console.timeEnd('apply');
 
         this._callback?.(this.selection);
     }
@@ -390,6 +429,25 @@ export class Lasso {
         this._invertModifiers =
             modifiers instanceof Array ? modifiers : [modifiers];
     }
+
+    /**
+     * Configure whether points are selected using a point-in-polygon check or
+     * an image-based check (rasterize path, check if pixel is filled).
+     * By default, the faster algorithm is chosen based on the input data.
+     * @param algorithm May be `polygon`, `image` or `auto`.
+     * @returns The Lasso instance.
+     */
+    public setAlgorithm(algorithm: Algorithm): Lasso {
+        this.algorithm = algorithm;
+        return this;
+    }
+
+    /**
+     * @see {@link setInvertModifiers}
+     */
+    public set algorithm(algorithm: Algorithm) {
+        this._algorithm = algorithm;
+    }
     //#endregion configuration
 
     //#region main interface
@@ -611,3 +669,4 @@ export { Options } from './types/options';
 export { PathStyle } from './types/pathStyle';
 export { ResultType } from './types/resultType';
 export { Shape } from './types/shape';
+export { Algorithm } from './types/algorithm';

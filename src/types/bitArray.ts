@@ -18,7 +18,7 @@ export class BitArray {
         return (number & mask) !== 0;
     }
 
-    set(index: number, value: boolean): void {
+    set(index: number, value: boolean = true): void {
         if(index < 0 || index >= this._length) return;
         const byte = Math.floor(index / 8);
         const bit = index % 8;

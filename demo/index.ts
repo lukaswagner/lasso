@@ -1,6 +1,7 @@
-import { Canvas, vec3 } from 'webgl-operate';
+import { Canvas } from 'webgl-operate';
 import { PointRenderer } from './renderer';
-import { Lasso, ResultType, Shape } from '..';
+import { Lasso, Shape } from '..';
+import { vec3 } from 'gl-matrix';
 
 // renderer setup
 const htmlCanvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -10,7 +11,7 @@ const renderer = new PointRenderer();
 canvas.renderer = renderer;
 
 // create random points
-const numPoints = 1e5;
+const numPoints = 5e4;
 const points: vec3[] = [];
 const rand = () => Math.random() * 2 - 1;
 for(let i = 0; i < numPoints; i++) {

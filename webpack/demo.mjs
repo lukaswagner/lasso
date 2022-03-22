@@ -17,12 +17,21 @@ export default function(env, args) {
         context: path.join(__dirname, '..', 'demo'),
         entry: {
             index: './index.ts',
+            perf: './perf.ts',
             icons: './icons.ts',
             style: './style.css',
         },
         output: { clean: true },
         plugins: [
-            new HtmlWebpackPlugin({ template: './index.pug' }),
+            new HtmlWebpackPlugin({
+                template: './index.pug',
+                chunks: ['index', 'icons', 'style']
+            }),
+            new HtmlWebpackPlugin({
+                template: './perf.pug',
+                filename: 'perf.html',
+                chunks: ['perf']
+            }),
             new MiniCssExtractPlugin(),
             new RemoveEmptyScriptsPlugin(),
         ],
