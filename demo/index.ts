@@ -11,7 +11,7 @@ const renderer = new PointRenderer();
 canvas.renderer = renderer;
 
 // create random points
-const numPoints = 1e5;
+const numPoints = 5e4;
 const points: vec3[] = [];
 const rand = () => Math.random() * 2 - 1;
 for(let i = 0; i < numPoints; i++) {

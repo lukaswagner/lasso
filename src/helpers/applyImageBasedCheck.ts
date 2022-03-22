@@ -20,6 +20,5 @@ export function applyImageBasedCheck(
             x >= bmp.x0 && x <= bmp.x1 && y >= bmp.y0 && y<= bmp.y1 &&
             bmp.data.get((y - bmp.y0) * bmp.width + (x - bmp.x0));
         if (inside) selection.set(i, value);
-        if (window.verbose) console.log(p, inside ? 'is inside' : 'is outside');
     });
 }

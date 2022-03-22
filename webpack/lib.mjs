@@ -23,7 +23,15 @@ export default function(env, args) {
         },
         resolve: { extensions: ['.ts', '...'] },
         module: {
-            rules: [ { test: /\.ts$/, use: { loader: 'ts-loader' } } ],
+            rules: [
+                { test: /\.ts$/, use: { loader: 'ts-loader' } },
+                { test: /\.json$/, type: 'asset/source' },
+                {
+                    test: /\.bin$/,
+                    type: 'asset/inline',
+                    generator: { dataUrl: (d) => d }
+                }
+            ],
         },
         devtool: 'source-map',
     }

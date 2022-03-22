@@ -2,7 +2,7 @@ import { mat4, vec2, vec3 } from 'gl-matrix';
 import { BitArray } from './types/bitArray';
 import { Callback } from './types/callback';
 import { Listeners } from './types/listeners';
-import { boxToPath, isBox, Mask } from './types/mask';
+import { boxToPath, isBox, Mask, Path } from './types/mask';
 import { Options } from './types/options';
 import { ResultType } from './types/resultType';
 import { Selection } from './types/selection';
@@ -16,6 +16,7 @@ import { Shape } from './types/shape';
 import { PathStyle } from './types/pathStyle';
 import { applyImageBasedCheck } from './helpers/applyImageBasedCheck';
 import { Algorithm } from './types/algorithm';
+import { lookup } from './lookup/lookup';
 
 export class Lasso {
     protected _resultType: ResultType;
@@ -46,6 +47,7 @@ export class Lasso {
      * @param options See configuration functions for available options.
      */
     public constructor(options?: Options) {
+        if(options?.verbose) this.verbose = true;
         this._resultType = options?.resultType ?? ResultType.ByteArray;
         this._points = options?.points;
         this._target = options?.target;
@@ -63,11 +65,26 @@ export class Lasso {
     }
 
     //#region internal
-    protected getAlgorithm() {
+    protected accessLookup(pathLength: number) {
+        const pixel = this._target.clientWidth * this._target.clientHeight;
+        if(window.verbose)
+            console.log('lookup', this._points.length, pathLength, pixel);
+        const lookupResult = lookup(this._points.length, pathLength, pixel);
+        if(window.verbose) console.table(lookupResult);
+        const algo = lookupResult
+            .sort((a, b) => a.value - b.value)[0].algorithm;
+        return algo;
+    }
+
+    protected getAlgorithm(pathLength: number) {
         switch (this._algorithm) {
             // threshold approximated by testing - should run precise perf test
             case Algorithm.Auto:
-                return this._rCache.points.length > 5e4 ?
+                if(window.verbose) console.time('lookup');
+                const algo = this.accessLookup(pathLength);
+                if(window.verbose) console.timeEnd('lookup');
+                if(window.verbose) console.log('better algorithm: ' + algo);
+                return algo === Algorithm.Image ?
                     applyImageBasedCheck : applyInsideCheck;
             case Algorithm.Polygon:
                 return applyInsideCheck;
@@ -102,13 +119,14 @@ export class Lasso {
             }
         }
 
+        if(window.verbose) console.time('apply');
         switch (step.type) {
             case StepType.Add:
-                this.getAlgorithm()(
+                this.getAlgorithm(step.mask.length)(
                     this._rCache.points, step.mask, this._selection, true);
                 break;
             case StepType.Sub:
-                this.getAlgorithm()(
+                this.getAlgorithm(step.mask.length)(
                     this._rCache.points, step.mask, this._selection, false);
                 break;
             case StepType.Rst:
@@ -117,6 +135,7 @@ export class Lasso {
             default:
                 break;
         }
+        if(window.verbose) console.timeEnd('apply');
 
         this._callback?.(this.selection);
     }

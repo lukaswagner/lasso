@@ -17,6 +17,5 @@ export function applyInsideCheck(
     points.forEach((p, i) => {
         const inside = pointInsidePolygon(p, path, bb);
         if (inside) selection.set(i, value);
-        if (window.verbose) console.log(p, inside ? 'is inside' : 'is outside');
     });
 }

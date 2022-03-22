@@ -6,6 +6,7 @@ import { ResultType } from './resultType';
 import { Source } from './source';
 
 export type Options = {
+    verbose?: boolean,
     resultType?: ResultType,
     points?: Source,
     target?: HTMLElement,
