@@ -32,11 +32,14 @@ const start = document.getElementById('start') as HTMLButtonElement;
 const progressNumber = document.getElementById('progNum') as HTMLSpanElement;
 const progressBar = document.getElementById('progBar') as HTMLProgressElement;
 
-const points = [1e2, 5e2, 1e3, 5e3, 1e4, 5e4, 1e5, 5e5];
-const path = [1e1, 25e0, 5e1, 1e2, 25e1, 5e2, 1e3];
+const points = [
+    5e2, 1e3, 5e3, 1e4, 5e4, 1e5, 5e5
+];
+const path = [
+    25e0, 5e1, 1e2, 25e1, 5e2, 1e3
+];
 const resolution = [
-    [200, 200],
-    [500, 500],
+    [640, 480],
     [800, 600],
     [1280, 720],
     [1920, 1080],
@@ -44,8 +47,8 @@ const resolution = [
     [3840, 2160]
 ];
 const algorithm = [Algorithm.Polygon, Algorithm.Image];
-const warmupPasses = 0;
-const benchmarkPasses = 1;
+const warmupPasses = 3;
+const benchmarkPasses = 5;
 const passes: { pass: number }[] = [];
 for(let i = -warmupPasses; i < 0; i++) passes.push({ pass: i });
 for(let i = 0; i < benchmarkPasses; i++) passes.push({ pass: i });
@@ -53,9 +56,6 @@ for(let i = 0; i < benchmarkPasses; i++) passes.push({ pass: i });
 console.table(points);
 console.table(path);
 console.table(resolution);
-console.table(
-    'combinations: ' +
-    (points.length * path.length * resolution.length * algorithm.length));
 
 const configs: Config[] = [{}]
     .map((c) => points.map((v) => Object.assign({}, c,  { points: v })))
@@ -167,10 +167,11 @@ async function run() {
     console.log('Total time: ' + ((end - start) / 1000).toFixed(3) + 's');
 
     graph(results);
+    generateLUT(results);
 }
 
 function graph(data: Sample[]) {
-    const refPoints = 1e5;
+    const refPoints = 1e4;
     const refPath = 1e2;
     const refRes = [1920, 1080];
 
@@ -256,4 +257,57 @@ function graph(data: Sample[]) {
             }
         }
     });
+}
+
+function generateLUT(data: Sample[]) {
+    const combinations =
+        points.length * path.length * resolution.length * algorithm.length;
+    const bytesPerValue = 1;
+    const bytes = combinations * bytesPerValue;
+
+    const pixel = resolution.map((v) => v[0] * v[1]);
+
+    const values = new Array<number>(combinations).fill(0);
+    const counts = new Array<number>(combinations).fill(0);
+
+    const idx = (s: Sample) => {
+        let i = algorithm.findIndex((v) => v === s.algorithm);
+        let c = algorithm.length;
+        i += c * pixel.findIndex((v) => v === s.width * s.height);
+        c *= pixel.length;
+        i += c * path.findIndex((v) => v === s.path);
+        c *= path.length;
+        i += c * points.findIndex((v) => v === s.points);
+        return i;
+    };
+    data.forEach((v) => {
+        const i = idx(v);
+        values[i] += v.time;
+        counts[i]++;
+    });
+
+    let max = 0;
+    for(let i = 0; i < combinations; i++) {
+        let v = values[i] / counts[i];
+        values[i] = v;
+        if(v > max) max = v;
+    }
+
+    const maxLog = Math.log(max);
+    const fac = 255 / maxLog;
+    console.log(max, maxLog, fac, maxLog * fac);
+
+    const mapped = values.map((v) => Math.round(Math.log(v) * fac));
+    download('lookupData.bin', new Uint8Array(mapped));
+
+    const lookupHeader = { points, path, pixel, algorithm }
+    download('lookupHeader.json', JSON.stringify(lookupHeader));
+}
+
+function download(name: string, data: string | Uint8Array) {
+    const blob = new Blob([data]);
+    const a = document.createElement('a');
+    a.setAttribute('href', window.URL.createObjectURL(blob));
+    a.setAttribute('download', name);
+    a.click();
 }
