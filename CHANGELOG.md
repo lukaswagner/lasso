@@ -1,3 +1,9 @@
+## v0.3.1
+
+### Bug Fixes
+
+- [#11](https://github.com/lukaswagner/lasso/pull/11): Properly implement undo/redo and fix appropriate docs.
+
 ## v0.3
 
 ### Features
