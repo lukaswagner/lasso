@@ -2,13 +2,11 @@
 
 Lasso and box select utility for 3D points on a 2D screen. Supports undo and redo.
 
+## demo
+
+You can try it out [here](https://lasso.lwgnr.dev/). See [demo/index.ts](./demo/index.ts) for a the demo source code.
+
 ## usage
-
-### full example
-
-See [demo/index.ts](./demo/index.ts) for a full example.
-
-### example
 
 Usage example for selecting 3D points with integrated mouse event handling. Note that all configuration options can be either set in the constructor (e.g. `new Lasso({target})`), via function (`lasso.setTarget`) or via property (`lasso.target`).
 
