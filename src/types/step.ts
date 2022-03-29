@@ -1,4 +1,5 @@
 import { mat4 } from 'gl-matrix';
+import { BitArray } from './bitArray';
 import { Mask } from './mask';
 
 export enum StepType {
@@ -10,5 +11,6 @@ export enum StepType {
 export type Step = {
     type: StepType,
     matrix?: mat4,
-    mask?: Mask
+    mask?: Mask,
+    state?: BitArray
 }

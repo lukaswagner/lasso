@@ -30,6 +30,7 @@ export class Lasso {
     protected _drawPath: boolean;
     protected _pathStyle: PathStyle;
     protected _algorithm: Algorithm;
+    protected _undoSteps: number;
     protected _shape: Shape = Shape.Lasso;
 
     protected _mCache: MatrixCache;
@@ -62,6 +63,7 @@ export class Lasso {
             this.drawPath = options?.drawPath;
         }
         this._algorithm = options?.algorithm ?? Algorithm.Auto;
+        this._undoSteps = options?.undoSteps ?? 0;
         if(this._points) this.reset();
     }
 
@@ -139,13 +141,20 @@ export class Lasso {
         }
         if(window.verbose) console.timeEnd('apply');
 
+        step.state = this._selection.clone();
         this._callback?.(this.selection);
     }
 
     protected enqueueStep(step: Step) {
         if(this._step === this._steps.length - 1) this._steps.push(step);
         else this._steps.splice(
-            this._step + 1, this._steps.length - this._step, step)
+            this._step + 1, this._steps.length - this._step, step);
+        this._steps.forEach((s, i) => {
+            if(i < this._steps.length - this._undoSteps && s.state) {
+                if(window.verbose) console.log(`deleting state ${i}`);
+                delete s.state;
+            }
+        });
     }
 
     protected chooseAddSub(ev: MouseEvent, mask: Mask) {
@@ -450,6 +459,24 @@ export class Lasso {
     public set algorithm(algorithm: Algorithm) {
         this._algorithm = algorithm;
     }
+
+    /**
+     * Set the number of states to keep for quick undo.
+     * If set to 0, undo is still enabled, but will iterate all previous steps.
+     * @param undoSteps Number of previous states to store.
+     * @returns The Lasso instance.
+     */
+     public setUndoSteps(undoSteps: number): Lasso {
+        this.undoSteps = undoSteps;
+        return this;
+    }
+
+    /**
+     * @see {@link setUndoSteps}
+     */
+    public set undoSteps(undoSteps: number) {
+        this._undoSteps = undoSteps;
+    }
     //#endregion configuration
 
     //#region main interface
@@ -503,18 +530,27 @@ export class Lasso {
      * @returns The Lasso instance.
      */
     public reset(): Lasso {
-        this._steps.push({ type: StepType.Rst });
+        this.enqueueStep({ type: StepType.Rst });
         this.redo();
         return this;
     }
 
     /**
      * Redo the last un-done action.
-     * @returns The Lasso instance.
+     * @returns Whether an action was applied.
      */
     public redo(): boolean {
         if(this._step === this._steps.length - 1) return false;
         const step = this._steps[++this._step];
+        // step has stored state -> copy
+        if(step.state) {
+            if(window.verbose) console.log(`quick redo ${this._step}`);
+            this._selection = step.state.clone();
+            this._callback?.(this.selection);
+            return true;
+        }
+        // no stored data -> calculate
+        if(window.verbose) console.log(`normal redo ${this._step}`);
         this.apply(step);
         return true;
     }
@@ -529,32 +565,29 @@ export class Lasso {
 
     /**
      * Undo the last action.
-     * @returns The Lasso instance.
+     * @returns Whether an action was reverted.
      */
     public undo(): boolean {
         if(this._step === 0) return false;
-        let step = this._steps[this._step--];
-        switch (step.type) {
-            case StepType.Add:
-                this.apply(Object.assign({}, step, { type: StepType.Sub }));
+        const prev = this._steps[--this._step];
+        // step has stored state -> copy
+        if(prev.state) {
+            if(window.verbose) console.log(`quick undo ${this._step + 1}`);
+            this._selection = prev.state.clone();
+            this._callback?.(this.selection);
+            return true;
+        }
+        // no stored data -> apply all steps starting from last reset
+        if(window.verbose) console.log(`normal undo ${this._step + 1}`);
+        let start = 0;
+        for (let i = this._step; i >= 0; i--) {
+            if (this._steps[i].type === StepType.Rst) {
+                start = i;
                 break;
-            case StepType.Sub:
-                this.apply(Object.assign({}, step, { type: StepType.Add }));
-                break;
-            case StepType.Rst:
-                let start = 0;
-                for (let i = this._step; i >= 0; i--) {
-                    if (this._steps[i].type === StepType.Rst) {
-                        start = i;
-                        break;
-                    }
-                }
-                for (let i = start; i <= this._step; i++) {
-                    this.apply(this._steps[i]);
-                }
-                break;
-            default:
-                break;
+            }
+        }
+        for (let i = start; i <= this._step; i++) {
+            this.apply(this._steps[i]);
         }
         return true;
     }
