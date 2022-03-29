@@ -16,4 +16,5 @@ export type Options = {
     invertModifiers?: string | string[],
     drawPath?: boolean | PathStyle,
     algorithm?: Algorithm,
+    undoSteps?: number
 }
